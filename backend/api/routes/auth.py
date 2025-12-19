@@ -14,7 +14,7 @@ def signup(user_data: UserSchema, response: Response, db: Session = Depends(db_s
         key="token",
         value=token,
         max_age=86400,
-        httpOnly=True,
+        httponly=True,
         samesite="lax"
     )
     return {
@@ -34,7 +34,7 @@ def signin(user_data: UserSchema, response: Response, db: Session = Depends(db_s
         key="token",
         value=token,
         max_age=86400,
-        httpOnly=True,
+        httponly=True,
         samesite="lax"
     )
     return {
@@ -45,3 +45,11 @@ def signin(user_data: UserSchema, response: Response, db: Session = Depends(db_s
             "email": user.email
         }
     }
+
+@router.post("/logout")
+def signout(response: Response = Cookie[None]):
+    try:
+        response.delete_cookie("token")
+        return {"message": "Logged out"}
+    except Exception as e:
+        print(f"Error wihle logging out: {str(e)}")

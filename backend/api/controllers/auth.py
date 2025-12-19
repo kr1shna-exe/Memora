@@ -48,7 +48,7 @@ def create_token(user: UserSchema):
     #     "email": user.email,
     #     "expires": datetime.now() + timedelta(hours=24)
     # }
-    token = jwt.encode({"id": user.id, "email": user.email, "expires": datetime.now() + timedelta(hours=24)}, jwt_secret, algorithms=["HS256"])
+    token jwt.encode({"id": user.id, "email": user.email, "expires": datetime.now() + timedelta(hours=24).timestamp()}, jwt_secret, algorithms=["HS256"])
     return token
 
 def authenticate_user(request: Request = None):
