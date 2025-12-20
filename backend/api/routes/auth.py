@@ -47,9 +47,9 @@ def signin(user_data: UserSchema, response: Response, db: Session = Depends(db_s
     }
 
 @router.post("/logout")
-def signout(response: Response = Cookie[None]):
+def signout(response: Response):
     try:
         response.delete_cookie("token")
         return {"message": "Logged out"}
     except Exception as e:
-        print(f"Error wihle logging out: {str(e)}")
+        print(f"Error while logging out: {str(e)}")
