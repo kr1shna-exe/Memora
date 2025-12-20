@@ -1,6 +1,5 @@
 from langchain_openai import OpenAIEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from config import settings
 from config.settings import settings
 from typing import List
 
