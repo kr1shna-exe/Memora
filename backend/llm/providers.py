@@ -34,3 +34,7 @@ class LLMClient():
                     )
         else:
             raise ValueError(f"Unsupported Provider: {self.provider}")
+
+    async def invoke(self, prompt: str):
+        response = await self.model.ainvoke(prompt)
+        return response.content

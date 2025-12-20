@@ -4,9 +4,7 @@ from exports.types import UserSchema
 from sqlalchemy.orm import Session
 import jwt, bcrypt
 from fastapi import HTTPException, Request
-from config.settings import Settings
-
-settings = Settings()
+from config.settings import settings
 
 def create_user(user_data: UserSchema, db: Session):
     user_exists = db.query(User).filter(User.email == user_data.email).first()
