@@ -1,5 +1,5 @@
 from exports.qdrant_client import client
-from qdrant_client.models import Distance, FieldCondition, Filter, VectorParams, MatchValue, PointStruct
+from qdrant_client.models import Distance, Filter, VectorParams, PointStruct, PointIdsList
 
 class VectorStore:
     def __init__(self, collection_name: str = "memories", vector_size: int = 768):
@@ -36,5 +36,12 @@ class VectorStore:
     def delete(self, point_id: str):
         self.client.delete(
                 collection_name=self.collection_name,
-                points_selector=[point_id]
+                points_selector=PointIdsList(points=[point_id])
+                )
+
+    def vector_scroll(self, filter_: Filter, limit: int = 5):
+        return self.client.scroll(
+                collection_name=self.collection_name,
+                filter=filter_,
+                limit=limit
                 )
