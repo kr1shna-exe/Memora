@@ -1,15 +1,12 @@
-from datetime import datetime
-import uuid
 from exports.qdrant_client import client
-from qdrant_client.models import Distance, FieldCondition, Filter, VectorParams, PointStruct, MatchValue
-
-from exports.types import MemoryType
+from qdrant_client.models import Distance, FieldCondition, Filter, VectorParams, MatchValue, PointStruct
 
 class VectorStore:
     def __init__(self, collection_name: str = "memories", vector_size: int = 768):
         self.client = client
         self.collection_name = collection_name
         self.vector_size = vector_size
+        self._create_collection()
 
     def _create_collection(self):
         if self.client.collection_exists(self.collection_name):
@@ -22,24 +19,22 @@ class VectorStore:
         except Exception as e:
             print(f"Error while creating the collection: {str(e)}")
 
-    def _add_vector(self, embedding, user_id: str, content: str):
-        point = PointStruct(
-                id=str(uuid.uuid4()),
-                vector=embedding,
-                payload={
-                    "userid": user_id,
-                    "memory_type": MemoryType.value,
-                    "content": content,
-                    "timestamp": datetime.now().isoformat()
-                    }
-                )
-        self.client.upsert(self.collection_name, points=[point])
+    def add_vector(self, point_id: str, vector: list[float], payload: dict):
+        self.client.upsert(collection_name=self.collection_name, wait=True, points=[
+            PointStruct(id=point_id, vector=vector, payload=payload)
+            ])
 
-    def _search(self, query:str, user_id: str):
-        return self.client.query(
+    def search(self, vector: list[float], filter_: Filter, limit: int = 5):
+        return self.client.query_points(
                 collection_name=self.collection_name,
-                query_text=query,
-                query_filter=Filter(must=[FieldCondition(key="userid", match=MatchValue(value=user_id))]),
+                vector=vector,
+                filter=filter_,
                 with_payload=True,
-                limit=5
+                limit=limit
+                )
+
+    def delete(self, point_id: str):
+        self.client.delete(
+                collection_name=self.collection_name,
+                points_selector=[point_id]
                 )
