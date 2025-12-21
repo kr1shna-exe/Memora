@@ -1,12 +1,14 @@
+from datetime import datetime
 import uuid
 from exports.types import Memory, MemoryType
 from utils.embeddings import EmbeddingGenerator
 from vector_store import VectorStore
-from typing import List, Optional
+from qdrant_client.models import FieldCondition, Filter, MatchValue, Condition, ScoredPoint
+from typing import Optional, cast
 
 class MemoryStore:
     def __init__(self, collection_name: str = "memories"):
-        self.vector = VectorStore()
+        self.vector_store = VectorStore()
         self.embed = EmbeddingGenerator()
 
     def store_memory(self, memory: Memory):
@@ -14,12 +16,12 @@ class MemoryStore:
             embed_content = self.embed.generate_embeddings(memory.content)
             point_id = str(uuid.uuid4())
             payload = {
-                "userid": memory.user_id,
+                "user_id": memory.user_id,
                 "memory_type": memory.memory_type.value,
                 "content": memory.content,
                 "timestamp": memory.timestamp.isoformat()
                 }
-            self.vector.add_vector(
+            self.vector_store.add_vector(
                     point_id=point_id,
                     vector=embed_content,
                     payload=payload
@@ -28,5 +30,83 @@ class MemoryStore:
         except Exception as e:
             print(f"Error while storing memory: {str(e)}")
 
-    def search_memories(self, query: str, user_id: str, memory_type: Optional[MemoryType] = None):
-        
+    def search_memories(self, query: str, user_id: str, memory_type: Optional[MemoryType] = None, limit: int = 5):
+        try:
+            embed_query = self.embed.generate_embeddings(query)
+            must_conditions: list[Condition] = [
+                    FieldCondition(
+                        key="user_id",
+                        match=MatchValue(value=user_id)
+                        )
+                    ]
+            if memory_type:
+                must_conditions.append(
+                        FieldCondition(
+                            key="memory_type",
+                            match=MatchValue(value=memory_type.value)
+                        )
+                    )
+            filter_ = Filter(must=must_conditions)
+            results = self.vector_store.search(
+                    vector=embed_query,
+                    filter_=filter_,
+                    limit=limit
+                    )
+
+            memories: list[Memory] = []
+
+            for point in results:
+                point = cast(ScoredPoint, point)
+                payload = point.payload or {}
+                memories.append(
+                        Memory(
+                            id=str(point.id),
+                            content=payload["content"],
+                            memory_type=payload["memory_type"],
+                            metadata=payload.get("metadata", {}),
+                            user_id=payload["user_id"],
+                            timestamp=datetime.fromisoformat(payload["timestamp"])
+                            )
+                        )
+                return memories
+        except Exception as e:
+            print(f"Error while searching & storing in memory: {str(e)}")
+
+    def user_memories(self, user_id: str, memory_type: Optional[MemoryType] = None):
+        must_conditions: list[Condition] = [
+                FieldCondition(
+                    key="user_id",
+                    match=MatchValue(value=user_id)
+                    )
+                ]
+        if memory_type:
+            must_conditions.append(
+                    FieldCondition(
+                        key="memory_type",
+                        match=MatchValue(value=memory_type.value)
+                        )
+                    )
+
+        filter_ = Filter(must=must_conditions)
+        results = self.vector_store.search(
+                vector=[0.0] * self.vector_store.vector_size,  #Dummy vector
+                filter_ = filter_,
+                limit=50
+                )
+
+        for point in results:
+            point = cast(ScoredPoint, point)
+            payload = point.payload or {}
+            return [
+                    Memory(
+                    id=str(point.id),
+                    content=payload["content"],
+                    memory_type=payload["memory_type"],
+                    metadata=payload.get("metadata", {}),
+                    user_id=payload["user_id"],
+                    timestamp=datetime.fromisoformat(payload["timestamp"])
+                )
+            ]
+
+    def delete_memory(self, memory_id: str):
+        self.vector_store.delete(memory_id)
