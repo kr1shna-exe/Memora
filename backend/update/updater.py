@@ -25,9 +25,12 @@ class MemoryUpdater():
                     "deleted": [],
                     "unchanged": []
                     }
+        similar = []
+        for new_mem in new_memories:
+            similar.extend(self.deduplicator.find_similar_memories(new_mem, user_id))
         old_memory = [
                 {"id": memory.id, "content": memory.content}
-                for memory in existing_memories
+                for memory in similar
                 ]
         new_facts = [memory.content for memory in new_memories]
         prompt = f"""{DEFAULT_UPDATE_MEMORY_PROMPT}
@@ -64,7 +67,7 @@ class MemoryUpdater():
 
             elif event == "UPDATE":
                 for mem in existing_memories:
-                    if mem.content == item.get["content"]:
+                    if mem.content == item.get("old_memory"):
                         self.memory_store.delete_memory(mem.id)
                         break
                 updated_mem = Memory(

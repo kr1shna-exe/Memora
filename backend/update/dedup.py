@@ -8,10 +8,10 @@ class MemoryDeduplicator:
         self.similarity_threshold = similarity_threshold
         self.memory_store = MemoryStore()
 
-    def find_similiar_memories(self, new_memory: Memory, user_id: str):
+    def find_similar_memories(self, new_memory: Memory, user_id: str):
         results = self.memory_store.search_memories_with_scores(query=new_memory.content, user_id=user_id)
-        similiarity = []
+        similarity = []
         for memory in results:
             if memory.score >= self.similarity_threshold:
-                similiarity.append((memory, memory.score))
-        return similiarity
+                similarity.append(memory)
+        return similarity
