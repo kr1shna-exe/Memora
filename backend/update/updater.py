@@ -1,16 +1,17 @@
 from typing import List
+from exports.parser import normalize_llm_response
 from exports.types import Memory, MemoryType
 from llm.orchestrator import LLMOrchestrator
 from llm.prompts import DEFAULT_UPDATE_MEMORY_PROMPT
 from storage.memory_store import MemoryStore
 from datetime import datetime
+from update.dedup import MemoryDeduplicator
 import json
-
 
 class MemoryUpdater():
     def __init__(self):
         self.llm_orchestrator = LLMOrchestrator()
-        self.deduplicator = MemoryUpdater()
+        self.deduplicator = MemoryDeduplicator()
         self.memory_store = MemoryStore()
 
     async def update_memories(self, new_memories: List[Memory], user_id: str):
@@ -22,7 +23,7 @@ class MemoryUpdater():
                     "added": new_memories,
                     "updated": [],
                     "deleted": [],
-                    "unchanges": []
+                    "unchanged": []
                     }
         old_memory = [
                 {"id": memory.id, "content": memory.content}
@@ -39,8 +40,8 @@ class MemoryUpdater():
         Return updated memory:
         """
         llm_response = await self.llm_orchestrator.ai_invoke(prompt)
-
-        parsed = json.loads(llm_response)
+        normalized_response = normalize_llm_response(llm_response)
+        parsed = json.loads(normalized_response)
         memory_updates = parsed["memory"]
 
         added = []
@@ -54,7 +55,7 @@ class MemoryUpdater():
                         id=item["id"],
                         user_id=user_id,
                         timestamp=datetime.now(),
-                        content=item["content"],
+                        content=item["text"],
                         memory_type=MemoryType.SEMANTIC,
                         metadata={}
                         )
@@ -63,25 +64,36 @@ class MemoryUpdater():
 
             elif event == "UPDATE":
                 for mem in existing_memories:
-                    if mem.content == item.content:
+                    if mem.content == item.get["content"]:
                         self.memory_store.delete_memory(mem.id)
+                        break
                 updated_mem = Memory(
                         id=item["id"],
                         user_id=user_id,
                         timestamp=datetime.now(),
-                        content=item["content"],
+                        content=item["text"],
                         memory_type=MemoryType.SEMANTIC,
                         metadata={}
                         )
                 self.memory_store.store_memory(updated_mem)
                 updated.append(updated_mem)
 
-            elif event == "DELETED":
+            elif event == "DELETE":
+                memory_id = item["id"]
+                deleted_memory = None
+                for mem in existing_memories:
+                    if mem.id == memory_id:
+                        deleted_memory = mem
                 self.memory_store.delete_memory(item["id"])
-                deleted.append(...)
+                if deleted_memory:
+                    deleted.append(deleted_memory)
 
             elif event == "NONE":
-                unchanged.append(...)
+                memory_id = item["id"]
+                for mem in existing_memories:
+                    if mem.id == memory_id:
+                        unchanged.append(mem)
+                        break
         return {
                 "added": added,
                 "updated": updated,
