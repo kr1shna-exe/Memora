@@ -31,8 +31,11 @@ class Memory(BaseModel):
     content: str
     memory_type: MemoryType
     metadata: dict
-    user_id: int
+    user_id: str
     timestamp: datetime
+
+class MemorySearchResult(Memory):
+    score: float
 
 class LLMProvider(Enum):
     OPENAI = "openai"

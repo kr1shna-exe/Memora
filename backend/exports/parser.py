@@ -1,7 +1,7 @@
 import re, json
 from pydantic import ValidationError
-
 from exports.types import MemoryExtractionOutput
+from typing import Dict, List, Union, Any
 
 def parse_extracted_response(llm_response: str) -> MemoryExtractionOutput:
     json_response = None
@@ -27,3 +27,20 @@ def parse_extracted_response(llm_response: str) -> MemoryExtractionOutput:
         return MemoryExtractionOutput.model_validate(parsed)
     except ValidationError as e:
         raise ValueError(f"Json does not match the MemoryExtractionOutput schema: {str(e)}")
+
+def normalize_llm_response(
+    response: Union[str, List[Union[str, Dict[str, Any]]]]
+) -> str:
+    if isinstance(response, str):
+        return response
+
+    if isinstance(response, list):
+        parts = []
+        for item in response:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                content = item.get("content")
+                if isinstance(content, str):
+                    parts.append(content)
+        return "\n".join(parts)

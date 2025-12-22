@@ -1,6 +1,6 @@
 from datetime import datetime
 import uuid
-from exports.types import Memory, MemoryType
+from exports.types import Memory, MemorySearchResult, MemoryType
 from utils.embeddings import EmbeddingGenerator
 from storage.vector_store import VectorStore
 from qdrant_client.models import FieldCondition, Filter, MatchValue, Condition, ScoredPoint
@@ -116,3 +116,48 @@ class MemoryStore:
 
     def delete_memory(self, memory_id: str):
         self.vector_store.delete(memory_id)
+
+    def search_memories_with_scores(self, query: str, user_id: str, memory_type: Optional[MemoryType] = None, limit: int = 5):
+        try:
+            embed_query = self.embed.generate_embeddings(query)
+            must_conditions: list[Condition] = [
+                    FieldCondition(
+                        key="user_id",
+                        match=MatchValue(value=user_id)
+                        )
+                    ]
+            if memory_type:
+                must_conditions.append(
+                        FieldCondition(
+                            key="memory_type",
+                            match=MatchValue(value=memory_type.value)
+                        )
+                    )
+            filter_ = Filter(must=must_conditions)
+            results = self.vector_store.search(
+                    vector=embed_query,
+                    filter_=filter_,
+                    limit=limit
+                    )
+
+            memories: List[MemorySearchResult] = []
+
+            for point in results:
+                point = cast(ScoredPoint, point)
+                payload = point.payload or {}
+                memories.append(
+                        MemorySearchResult(
+                            id=str(point.id),
+                            content=payload["content"],
+                            memory_type=MemoryType(payload["memory_type"]),
+                            metadata=payload.get("metadata", {}),
+                            score=point.score,
+                            user_id=payload["user_id"],
+                            timestamp=datetime.fromisoformat(payload["timestamp"])
+                            )
+                        )
+            return memories
+        except Exception as e:
+            print(f"Error while searching & storing in memory: {str(e)}")
+            return []
+
