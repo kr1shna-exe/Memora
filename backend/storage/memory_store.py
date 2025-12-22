@@ -4,7 +4,7 @@ from exports.types import Memory, MemoryType
 from utils.embeddings import EmbeddingGenerator
 from storage.vector_store import VectorStore
 from qdrant_client.models import FieldCondition, Filter, MatchValue, Condition, ScoredPoint
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 class MemoryStore:
     def __init__(self, collection_name: str = "memories"):
@@ -53,7 +53,7 @@ class MemoryStore:
                     limit=limit
                     )
 
-            memories: list[Memory] = []
+            memories: List[Memory] = []
 
             for point in results:
                 point = cast(ScoredPoint, point)
@@ -95,19 +95,21 @@ class MemoryStore:
                     limit=50
                     )
 
+            memories: List[Memory] = []
             for point in results:
                 point = cast(ScoredPoint, point)
                 payload = point.payload or {}
-            return [
-                    Memory(
-                    id=str(point.id),
-                    content=payload["content"],
-                    memory_type=MemoryType(payload["memory_type"]),
-                    metadata=payload.get("metadata", {}),
-                    user_id=payload["user_id"],
-                    timestamp=datetime.fromisoformat(payload["timestamp"])
-                )
-            ]
+                memories.append(
+                        Memory(
+                            id=str(point.id),
+                            content=payload["content"],
+                            user_id=payload["user_id"],
+                            memory_type=payload["memory_type"],
+                            timestamp=datetime.fromisoformat(payload["timestam"]),
+                            metadata=payload.get("metadata", {})
+                            )
+                        )
+            return memories
         except Exception as e:
             print(f"Error while fetching user memories: {str(e)}")
             return []
