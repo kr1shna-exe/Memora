@@ -104,8 +104,8 @@ class MemoryStore:
                             id=str(point.id),
                             content=payload["content"],
                             user_id=payload["user_id"],
-                            memory_type=payload["memory_type"],
-                            timestamp=datetime.fromisoformat(payload["timestam"]),
+                            memory_type=MemoryType(payload["memory_type"]),
+                            timestamp=datetime.fromisoformat(payload["timestamp"]),
                             metadata=payload.get("metadata", {})
                             )
                         )
