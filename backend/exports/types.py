@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 from pydantic import BaseModel, Field, EmailStr
 from enum import Enum
 
@@ -13,6 +14,12 @@ class User(BaseModel):
     username: str
     email: EmailStr
     password: str
+
+class MemoryExtractionOutput(BaseModel):
+    """Output format from LLM memory extraction"""
+    facts: List[str] = Field(default_factory=list)
+    class Config:
+        extra = "ignore"
 
 class MemoryType(Enum):
     SEMANTIC = "semantic"
