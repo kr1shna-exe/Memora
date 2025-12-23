@@ -161,3 +161,5 @@ class MemoryStore:
             print(f"Error while searching & storing in memory: {str(e)}")
             return []
 
+    def custom_search_with_filters(self, filter_: Filter):
+        
