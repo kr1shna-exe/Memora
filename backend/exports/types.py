@@ -36,6 +36,7 @@ class Memory(BaseModel):
 
 class MemorySearchResult(Memory):
     score: float
+    boosted_score: float = 0.0
 
 class LLMProvider(Enum):
     OPENAI = "openai"
