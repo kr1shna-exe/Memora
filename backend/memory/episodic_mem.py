@@ -27,7 +27,7 @@ class EpisodicMemory:
         now = datetime.now()
         for result in results:
             age = (now - result.timestamp).days
-            recency_factor = 1.0/ (1.0 + age + boost_factor)
+            recency_factor = 1.0/ (1.0 + age * boost_factor)
             result.boosted_score = result.score * recency_factor
         results.sort(key=lambda x: x.boosted_score, reverse=True)
         return results[:10]

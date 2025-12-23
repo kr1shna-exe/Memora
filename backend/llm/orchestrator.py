@@ -25,3 +25,11 @@ class LLMOrchestrator:
             model_name = model_name or auto_model
         client = LLMClient(provider=provider, model=model_name)
         return await client.invoke(prompt)
+
+    def get_agent_model(self, provider: LLMProvider | None = None, model_name: str | None = None):
+        if provider is None:
+            provider = self.default_provider
+        if model_name is None:
+            model_name = self.default_model[provider]
+        client = LLMClient(provider=provider, model=model_name)
+        return client.get_chat_model()

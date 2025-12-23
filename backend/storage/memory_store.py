@@ -161,5 +161,25 @@ class MemoryStore:
             print(f"Error while searching & storing in memory: {str(e)}")
             return []
 
-    def custom_search_with_filters(self, filter_: Filter):
-        
+    def custom_search_with_filters(self, filter_: Filter, limit: int = 10):
+        try:
+            results = self.vector_store.vector_scroll(filter_=filter_, limit=limit) 
+            memories: list[Memory] = []
+            for point in results:
+                point = cast(ScoredPoint, point)
+                payload = point.payload or {}
+                memories.append(
+                        Memory(
+                            id=str(point.id),
+                            content=payload["content"],
+                            memory_type=MemoryType(payload["memory_type"]),
+                            metadata=payload.get("metadata", {}),
+                            user_id=payload["user_id"],
+                            timestamp=datetime.fromisoformat(payload["timestamp"]),
+                            )
+                        )
+            return memories
+        except Exception as e:
+            print(f"Error while custom searching: {str(e)}")
+            return []
+

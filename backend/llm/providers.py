@@ -38,3 +38,6 @@ class LLMClient():
     async def invoke(self, prompt: str):
         response = await self.model.ainvoke(prompt)
         return response.content
+    
+    def get_chat_model(self):
+        return self.model
