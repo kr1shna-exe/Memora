@@ -1,7 +1,15 @@
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 from pydantic import BaseModel, Field, EmailStr
 from enum import Enum
+
+class ConversationRequest(BaseModel):
+    user_id: str
+    messages: List[Dict[str, str]]
+
+class SearchRequest(BaseModel):
+    user_id: str
+    query: str
 
 class UserSchema(BaseModel):
     username: str = Field(min_length=3, max_length=10)
