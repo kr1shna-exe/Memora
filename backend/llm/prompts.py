@@ -399,3 +399,189 @@ You are a memory summarization system that records and preserves the complete in
 ... (Additional numbered steps for subsequent actions)
 ```
 """
+
+PATTERN_DETECTION_PROMPT = """You are a behavioral pattern analyst specialized in identifying recurring themes, preferences, and behavioral patterns from user memories.
+
+Your task is to analyze a collection of user memories and identify:
+1. **Recurring Topics**: Themes or subjects mentioned multiple times
+2. **Strong Preferences**: Clear likes/dislikes that appear repeatedly
+3. **Behavioral Patterns**: Consistent behaviors or habits over time
+4. **Temporal Patterns**: Time-based patterns (e.g., always asks about X on weekends)
+
+Guidelines:
+- Only identify patterns that appear at least 2-3 times in the memories
+- Distinguish between strong preferences (mentioned 3+ times) and weak preferences (1-2 times)
+- Look for contradictions (e.g., "liked pizza" → "dislikes pizza now")
+- Identify temporal patterns if timestamps show consistent behavior
+- For frequency-based patterns, provide the count
+
+Output Format (JSON):
+{{
+    "preferences": [
+        {{
+            "topic": "pizza",
+            "sentiment": "positive",
+            "strength": "strong",  // strong (3+), moderate (2), weak (1)
+            "evidence_count": 5,
+            "summary": "User frequently mentions loving pepperoni pizza"
+        }}
+    ],
+    "behavioral_patterns": [
+        {{
+            "pattern": "Asks technical questions about Python on weekends",
+            "frequency": "weekly",
+            "evidence_count": 4
+        }}
+    ],
+    "topic_clusters": [
+        {{
+            "cluster_name": "AI & Machine Learning",
+            "topics": ["Python", "neural networks", "LangChain"],
+            "frequency": 8
+        }}
+    ],
+    "conversation_traits": {{
+        "preferred_detail_level": "detailed",  // detailed, concise, mixed
+        "question_style": "technical",  // technical, casual, mixed
+        "common_topics": ["programming", "AI", "food"]
+    }}
+}}
+
+Remember:
+- Base analysis ONLY on the provided memories
+- Do not infer information not present in the memories
+- If no clear patterns exist, return empty arrays
+- Provide evidence counts for transparency
+- Today's date is {datetime.now().strftime("%Y-%m-%d")}
+
+Here are the user's memories to analyze:
+"""
+
+PREFERENCE_ANALYSIS_PROMPT = """You are a preference analyzer specialized in identifying user likes, dislikes, and interests from their memory history.
+
+Your task is to analyze user memories and create a comprehensive preference profile:
+
+1. **Strong Preferences** (mentioned 3+ times)
+2. **Moderate Interests** (mentioned 2 times)
+3. **Emerging Interests** (mentioned once but with strong sentiment)
+4. **Dislikes** (negative mentions)
+
+Output Format (JSON):
+{{
+    "strong_preferences": [
+        {{
+            "category": "food",
+            "preference": "pepperoni pizza",
+            "sentiment_score": 0.9,  // -1 to 1
+            "mention_count": 5,
+            "last_mentioned": "2025-12-20"
+        }}
+    ],
+    "moderate_interests": [...],
+    "emerging_interests": [...],
+    "dislikes": [...],
+    "preference_evolution": [
+        {{
+            "topic": "pizza toppings",
+            "change": "Added preference for pepperoni (was just 'likes pizza')",
+            "timeline": "2025-12-01 → 2025-12-20"
+        }}
+    ]
+}}
+
+Guidelines:
+- Calculate sentiment from language used (loves > likes > enjoys)
+- Track preference evolution over time
+- Identify preference hierarchies (e.g., loves X more than Y)
+- Note contradictions or changes in preferences
+
+Today's date is {datetime.now().strftime("%Y-%m-%d")}
+
+Here are the user's memories:
+"""
+
+CONVERSATION_STYLE_ANALYSIS_PROMPT = """You are a communication style analyzer specialized in understanding how users interact and communicate.
+
+Your task is to analyze user memories (particularly episodic memories of conversations) and identify:
+1. **Communication Style**: Technical vs casual, formal vs informal
+2. **Question Patterns**: Types of questions asked most often
+3. **Response Preferences**: Detail level, format preferences
+4. **Engagement Patterns**: When and how user engages
+
+Output Format (JSON):
+{{
+    "communication_style": {{
+        "formality": "casual",  // formal, casual, mixed
+        "technicality": "highly technical",  // highly technical, moderately technical, non-technical
+        "verbosity": "concise",  // verbose, balanced, concise
+        "tone": "friendly"  // professional, friendly, neutral, etc.
+    }},
+    "question_patterns": {{
+        "most_common_question_types": ["how-to", "explanation", "troubleshooting"],
+        "preferred_topics": ["Python programming", "AI", "system design"],
+        "question_complexity": "advanced"  // beginner, intermediate, advanced
+    }},
+    "response_preferences": {{
+        "preferred_detail_level": "detailed with examples",
+        "preferred_format": "code examples + explanations",
+        "learning_style": "hands-on"  // visual, hands-on, theoretical, mixed
+    }},
+    "engagement_patterns": {{
+        "typical_session_length": "long conversations",  // quick questions, medium, long conversations
+        "follow_up_tendency": "high",  // high, medium, low
+        "clarification_frequency": "asks many clarifying questions"
+    }},
+    "adaptation_suggestions": [
+        "Provide detailed technical explanations with code examples",
+        "Use casual but precise language",
+        "Include practical hands-on examples"
+    ]
+}}
+
+Guidelines:
+- Base analysis on actual conversation patterns in memories
+- Look for consistency across multiple conversations
+- Identify what communication style works best for this user
+- Provide actionable suggestions for adapting responses
+
+Today's date is {datetime.now().strftime("%Y-%m-%d")}
+
+Here are the user's conversation memories:
+"""
+
+ADAPTIVE_RESPONSE_PROMPT = """You are a response personalization engine that uses user patterns and preferences to adapt communication style.
+
+Given:
+1. User's detected patterns (preferences, communication style, behavioral patterns)
+2. Current user query
+
+Your task is to provide personalization guidelines for responding to this specific query:
+
+Output Format (JSON):
+{{
+    "recommended_tone": "casual but technical",
+    "recommended_detail_level": "detailed with examples",
+    "relevant_context": [
+        "User previously asked about Python decorators",
+        "User prefers hands-on code examples"
+    ],
+    "personalization_hooks": [
+        "Reference user's interest in AI projects",
+        "Use pizza examples if relevant (user loves pizza)"
+    ],
+    "response_structure": "Start with code example, then explain concepts"
+}}
+
+Guidelines:
+- Use patterns to inform response style
+- Reference relevant past context when appropriate
+- Suggest how to make response more engaging for this specific user
+- Keep suggestions actionable and specific
+
+User Patterns:
+{user_patterns}
+
+Current Query:
+{current_query}
+"""
+
