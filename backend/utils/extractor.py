@@ -1,7 +1,7 @@
-from exports.parser import normalize_llm_response, parse_extracted_response
+from exports.parser import normalize_llm_response
 from exports.types import Memory, MemoryExtractionWithTypes, MemoryType
 from llm.orchestrator import LLMOrchestrator
-from llm.prompts import MEMORY_EXTRACTION_WITH_TYPES_PROMPT, USER_MEMORY_EXTRACTION_PROMPT
+from llm.prompts import MEMORY_EXTRACTION_WITH_TYPES_PROMPT
 from datetime import datetime
 from typing import Dict, List
 import uuid, json
@@ -9,7 +9,6 @@ import uuid, json
 class MemoryExtractor:
     def __init__(self):
         self.llm_orchestrator = LLMOrchestrator()
-        self.prompt_template = USER_MEMORY_EXTRACTION_PROMPT
 
     def _format_conversation(self, messages: List[Dict]):
         text_format: str = ''
