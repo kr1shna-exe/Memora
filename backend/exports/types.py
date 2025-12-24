@@ -21,6 +21,17 @@ class MemoryExtractionOutput(BaseModel):
     class Config:
         extra = "ignore"
 
+class MemoryExtractionItem(BaseModel):
+    """Individual memory item with type classification"""
+    content: str
+    type: str
+
+class MemoryExtractionWithTypes(BaseModel):
+    """Extraction output with memory type classification"""
+    memories: List[MemoryExtractionItem] = Field(default_factory=list)
+    class Config:
+        extra = "ignore"
+
 class MemoryType(Enum):
     SEMANTIC = "semantic"
     EPISODIC = "episodic"

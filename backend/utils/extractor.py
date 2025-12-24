@@ -1,10 +1,10 @@
 from exports.parser import normalize_llm_response, parse_extracted_response
-from exports.types import Memory, MemoryType
+from exports.types import Memory, MemoryExtractionWithTypes, MemoryType
 from llm.orchestrator import LLMOrchestrator
-from llm.prompts import USER_MEMORY_EXTRACTION_PROMPT
+from llm.prompts import MEMORY_EXTRACTION_WITH_TYPES_PROMPT, USER_MEMORY_EXTRACTION_PROMPT
 from datetime import datetime
 from typing import Dict, List
-import uuid
+import uuid, json
 
 class MemoryExtractor:
     def __init__(self):
@@ -22,13 +22,19 @@ class MemoryExtractor:
                 text_format += f"Assistant: {content}\n"
         return text_format.strip()
 
-    def _facts_to_memories(self, facts: List[str], user_id: str) -> List[Memory]:
+    def _extraction_to_memories(self, extraction: MemoryExtractionWithTypes, user_id: str) -> List[Memory]:
         memories = []
-        for fact in facts:
+        for item in extraction.memories:
+            if item.type.lower() == "semantic":
+                memory_type = MemoryType.SEMANTIC
+            elif item.type.lower() == "episodic":
+                memory_type = MemoryType.EPISODIC
+            else:
+                memory_type = MemoryType.SEMANTIC
             memory = Memory(
                     id=str(uuid.uuid4()),
-                    content=fact,
-                    memory_type=MemoryType.SEMANTIC,
+                    content=item.content,
+                    memory_type=memory_type,
                     user_id=user_id,
                     metadata={},
                     timestamp=datetime.now()
@@ -39,9 +45,14 @@ class MemoryExtractor:
 
     async def extract_from_conversation(self, messages, user_id):
         conversation_text = self._format_conversation(messages)
-        full_prompt = f"{USER_MEMORY_EXTRACTION_PROMPT}\n\n{conversation_text}"
+        full_prompt = f"{MEMORY_EXTRACTION_WITH_TYPES_PROMPT}\n\n{conversation_text}"
         llm_response = await self.llm_orchestrator.ai_invoke(full_prompt)
         normalized_response = normalize_llm_response(llm_response)
-        extraction = parse_extracted_response(normalized_response)
-        memories = self._facts_to_memories(extraction.facts, user_id)
-        return memories
+        try:
+            parsed = json.loads(normalized_response)
+            extraction = MemoryExtractionWithTypes.model_validate(parsed)
+            memories = self._extraction_to_memories(extraction, user_id)
+            return memories
+        except Exception as e:
+            print(f"Error while extracting memory from the conversation: {str(e)}")
+            return []
