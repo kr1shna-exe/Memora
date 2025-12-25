@@ -108,7 +108,7 @@ export default function RegisterPage() {
           </label>
         </div>
 
-        <Button type="submit" className="w-full" isLoading={isLoading}>
+        <Button type="submit" className="w-full cursor-pointer" isLoading={isLoading}>
           Create account
         </Button>
       </form>

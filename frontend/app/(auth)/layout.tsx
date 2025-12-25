@@ -10,7 +10,7 @@ export default function AuthLayout({
     <div className="min-h-screen bg-background">
       <div className="grid min-h-screen lg:grid-cols-2">
         <div className="relative hidden lg:block">
-          <div className="absolute inset-0 bg-primary" />
+          <div className="absolute inset-0 bg-[#1d4ed8] " />
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
           <div className="relative flex h-full flex-col justify-between p-12">
             <Link href="/" className="flex items-center gap-2">

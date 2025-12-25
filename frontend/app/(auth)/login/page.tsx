@@ -84,7 +84,7 @@ export default function LoginPage() {
         </div>
 
         <Button type="submit" className="w-full cursor-pointer" isLoading={isLoading}>
-          Sign in
+          Login
         </Button>
       </form>
       <p className="mt-8 text-center text-sm text-muted-foreground">

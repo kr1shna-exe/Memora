@@ -34,9 +34,9 @@ export default function LandingPage() {
               background: `
                 radial-gradient(
                   ellipse 80% 60% at 10% 40%,
-                  rgba(139, 92, 246, 0.4) 0%,
-                  rgba(168, 85, 247, 0.3) 30%,
-                  rgba(139, 92, 246, 0.15) 60%,
+                  rgba(29, 78, 216, 0.4) 0%,
+                  rgba(59, 130, 246, 0.3) 30%,
+                  rgba(30, 64, 175, 0.15) 60%,
                   transparent 80%
                 )
               `,
@@ -70,9 +70,9 @@ export default function LandingPage() {
               background: `
                 radial-gradient(
                   ellipse 70% 50% at 20% 50%,
-                  rgba(168, 85, 247, 0.5) 0%,
-                  rgba(192, 132, 252, 0.35) 25%,
-                  rgba(139, 92, 246, 0.2) 50%,
+                  rgba(59, 130, 246, 0.5) 0%,
+                  rgba(96, 165, 250, 0.35) 25%,
+                  rgba(29, 78, 216, 0.2) 50%,
                   transparent 75%
                 )
               `,
@@ -98,29 +98,29 @@ export default function LandingPage() {
         >
           <defs>
             <linearGradient id="riverGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(139, 92, 246, 0)" />
-              <stop offset="8%" stopColor="rgba(139, 92, 246, 0.35)" />
-              <stop offset="25%" stopColor="rgba(168, 85, 247, 0.6)" />
-              <stop offset="50%" stopColor="rgba(192, 132, 252, 0.5)" />
-              <stop offset="75%" stopColor="rgba(167, 139, 250, 0.35)" />
-              <stop offset="92%" stopColor="rgba(139, 92, 246, 0.15)" />
-              <stop offset="100%" stopColor="rgba(139, 92, 246, 0)" />
+              <stop offset="0%" stopColor="rgba(29, 78, 216, 0)" />
+              <stop offset="8%" stopColor="rgba(29, 78, 216, 0.35)" />
+              <stop offset="25%" stopColor="rgba(59, 130, 246, 0.6)" />
+              <stop offset="50%" stopColor="rgba(96, 165, 250, 0.5)" />
+              <stop offset="75%" stopColor="rgba(59, 130, 246, 0.35)" />
+              <stop offset="92%" stopColor="rgba(29, 78, 216, 0.15)" />
+              <stop offset="100%" stopColor="rgba(29, 78, 216, 0)" />
             </linearGradient>
             <linearGradient id="riverGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(168, 85, 247, 0)" />
-              <stop offset="12%" stopColor="rgba(168, 85, 247, 0.3)" />
-              <stop offset="35%" stopColor="rgba(139, 92, 246, 0.5)" />
-              <stop offset="65%" stopColor="rgba(192, 132, 252, 0.4)" />
-              <stop offset="88%" stopColor="rgba(139, 92, 246, 0.15)" />
-              <stop offset="100%" stopColor="rgba(139, 92, 246, 0)" />
+              <stop offset="0%" stopColor="rgba(59, 130, 246, 0)" />
+              <stop offset="12%" stopColor="rgba(59, 130, 246, 0.3)" />
+              <stop offset="35%" stopColor="rgba(29, 78, 216, 0.5)" />
+              <stop offset="65%" stopColor="rgba(96, 165, 250, 0.4)" />
+              <stop offset="88%" stopColor="rgba(29, 78, 216, 0.15)" />
+              <stop offset="100%" stopColor="rgba(29, 78, 216, 0)" />
             </linearGradient>
             <linearGradient id="riverGradient3" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(192, 132, 252, 0)" />
-              <stop offset="15%" stopColor="rgba(192, 132, 252, 0.25)" />
-              <stop offset="40%" stopColor="rgba(168, 85, 247, 0.4)" />
-              <stop offset="70%" stopColor="rgba(139, 92, 246, 0.3)" />
-              <stop offset="90%" stopColor="rgba(139, 92, 246, 0.1)" />
-              <stop offset="100%" stopColor="rgba(139, 92, 246, 0)" />
+              <stop offset="0%" stopColor="rgba(96, 165, 250, 0)" />
+              <stop offset="15%" stopColor="rgba(96, 165, 250, 0.25)" />
+              <stop offset="40%" stopColor="rgba(59, 130, 246, 0.4)" />
+              <stop offset="70%" stopColor="rgba(29, 78, 216, 0.3)" />
+              <stop offset="90%" stopColor="rgba(29, 78, 216, 0.1)" />
+              <stop offset="100%" stopColor="rgba(29, 78, 216, 0)" />
             </linearGradient>
             <filter id="glow1" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="20" result="coloredBlur" />
@@ -231,7 +231,7 @@ export default function LandingPage() {
           <motion.div
             className="absolute inset-0 rounded-full"
             style={{
-              background: "radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, rgba(139, 92, 246, 0.15) 50%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(29, 78, 216, 0.15) 50%, transparent 70%)",
               filter: "blur(50px)",
             }}
             animate={{
@@ -251,7 +251,7 @@ export default function LandingPage() {
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
-          backgroundImage: `radial-gradient(circle at center, rgba(139, 92, 246, 0.5) 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle at center, rgba(29, 78, 216, 0.5) 1px, transparent 1px)`,
           backgroundSize: "40px 40px",
         }}
       />
@@ -290,7 +290,7 @@ export default function LandingPage() {
               <Link
                 href={isLoggedIn ? "/dashboard" : "/login"}
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3 text-center text-sm font-medium text-white bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl"
+                className="w-full py-3 text-center text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl"
               >
                 Get Started
               </Link>
@@ -310,13 +310,13 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 mb-8 rounded-full border border-violet-500/20 bg-violet-500/10 backdrop-blur-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 mb-8 rounded-full border border-blue-500/20 bg-blue-500/10 backdrop-blur-sm"
           >
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
             </span>
-            <span className="text-sm font-medium text-violet-300">
+            <span className="text-sm font-medium text-blue-300">
               An Agentic Memory Engine
             </span>
           </motion.div>
@@ -328,7 +328,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
           >
             <span className="text-white">Your mind, </span>
-            <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-clip-text text-transparent">
               extended
             </span>
           </motion.h1>
@@ -351,24 +351,24 @@ export default function LandingPage() {
           >
             <Link href={isLoggedIn ? "/dashboard" : "/login"}>
               <motion.button
-                className="group relative flex cursor-pointer items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-violet-600 to-purple-600 rounded-full shadow-2xl shadow-violet-500/30 hover:shadow-violet-500/50 transition-all duration-500 overflow-hidden"
+                className="group relative flex cursor-pointer items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-400 rounded-full  transition-all duration-500 overflow-hidden"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
                 <span className="relative z-10">Start Building Memories</span>
                 <ArrowUpRight className="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </motion.button>
             </Link>
 
             <Link href={isLoggedIn ? "/dashboard" : "/login"}>
               <motion.button
-                className="group flex items-center cursor-pointer gap-2 px-8 py-4 text-base font-semibold text-zinc-300 border border-white/10 hover:border-violet-500/50 rounded-full backdrop-blur-sm hover:bg-white/5 transition-all duration-300"
+                className="group flex items-center cursor-pointer gap-2 px-8 py-4 text-base font-semibold text-zinc-300 border border-white/10 hover:border-blue-500/50 rounded-full backdrop-blur-sm hover:bg-white/5 transition-all duration-300"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
                 <span>Watch Demo</span>
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 group-hover:bg-violet-500/20 transition-colors">
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 group-hover:bg-blue-500/20 transition-colors">
                   <ArrowUpRight className="h-3 w-3" />
                 </div>
               </motion.button>
@@ -389,7 +389,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
                 className="flex items-center gap-2 text-sm text-zinc-500"
               >
-                <div className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+                <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                 <span>{type} Memory</span>
               </motion.div>
             ))}
@@ -422,7 +422,7 @@ export default function LandingPage() {
         </motion.div>
       </main>
 
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
     </div>
   );
 }
