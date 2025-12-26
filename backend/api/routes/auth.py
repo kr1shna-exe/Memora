@@ -1,8 +1,8 @@
 from exports.sql_init import db_session
 from exports.types import UserSchema
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Request
 from sqlalchemy.orm import Session
-from controllers.auth import create_user, get_user, verify_password, create_token, authenticate_user
+from controllers.auth import create_user, get_current_user, get_user, create_token
 
 router = APIRouter()
 
@@ -53,3 +53,10 @@ def signout(response: Response):
         return {"message": "Logged out"}
     except Exception as e:
         print(f"Error while logging out: {str(e)}")
+
+@router.get("/me")
+def get_me(request: Request, db: Session = Depends(db_session)):
+    user = get_current_user(request, db)
+    return {
+            "user": user
+            }

@@ -60,13 +60,23 @@ def create_token(user: User):
     )
     return token
 
-
-def authenticate_user(request: Request):
+def get_current_user(request: Request, db: Session):
     token = request.cookies.get("token")
     if not token:
-        raise HTTPException(status_code=401, detail="Token not found")
+        raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        decoded_token = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Token expired or invalid")
-    return decoded_token
+        decodedToken = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+        if decodedToken.get("expires", 0) < datetime.now().timestamp():
+            raise HTTPException(status_code=401, detail="Token expired")
+        user_id = decodedToken.get("id")
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username
+                }
+    except Exception as e:
+        print(f"Error while authenticating user: {str(e)}")
+        raise HTTPException(status_code=401, detail="Authentication Failed")
