@@ -5,19 +5,36 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button, Input } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
+  const { login } = useAuth();
+  const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
+    const payload = {
+      email: formData.email,
+      password: formData.password
+    }
+    try {
+      await login(payload);
+      router.replace("/dashboard");
+    } catch (err) {
+      setError(`Login Failed: ${err}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

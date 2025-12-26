@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
 
 export interface Conversation {
   id: string;
@@ -32,7 +33,7 @@ interface ConversationGroup {
 
 interface SidebarProps {
   user?: {
-    name: string;
+    username: string;
     email: string;
     avatar?: string;
   };
@@ -93,6 +94,7 @@ export function Sidebar({
   const [hoveredConversation, setHoveredConversation] = useState<string | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { logout } = useAuth();
 
   const groupedConversations = groupConversationsByDate(conversations);
 
@@ -112,8 +114,8 @@ export function Sidebar({
     };
   }, [showUserMenu]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("memora_token");
+  const handleLogout = async () => {
+    await logout();
     router.push("/login");
   };
 
@@ -258,14 +260,14 @@ export function Sidebar({
             )}
           >
             <Avatar
-              fallback={user?.name || "User"}
+              fallback={user?.username || "User"}
               src={user?.avatar}
               size="sm"
               className="bg-blue-600 text-white"
             />
             <div className="flex-1 min-w-0 text-left">
               <p className="truncate text-sm font-medium text-zinc-200">
-                {user?.name || "User"}
+                {user?.email || "User"}
               </p>
             </div>
             <ChevronUp

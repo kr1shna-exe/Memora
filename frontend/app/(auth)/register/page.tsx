@@ -5,20 +5,32 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button, Input } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
   });
 
+  const { register } = useAuth();
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
+    try {
+      await register({ email: formData.email, username: formData.username, password: formData.password });
+      router.replace("/dashboard")
+    } catch (err) {
+      setError(`Registration Failed: ${err}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,8 +51,8 @@ export default function RegisterPage() {
           label="Full Name"
           type="text"
           placeholder="John Doe"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           leftIcon={<User className="h-4 w-4" />}
           required
         />

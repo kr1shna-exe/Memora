@@ -7,22 +7,23 @@ import {
   register as apiRegister,
   logout as apiLogout,
   getMe,
-  Response,
-  Payload
+  User,
+  RegisterPayload,
+  LoginPayload
 } from "@/lib/api/auth";
 
 interface AuthContext {
-  user: Response | null;
+  user: User | null;
   isLoading: boolean;
-  login: (payload: Payload) => Promise<void>;
-  register: (payload: Payload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContext | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<Response | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -31,12 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(setUser).catch(() => setUser(null)).finally(() => setIsLoading(false));
   }, [])
 
-  const login = async (payload: Payload) => {
+  const login = async (payload: LoginPayload) => {
     const user = await apiLogin(payload)
     setUser(user)
   }
 
-  const register = async (payload: Payload) => {
+  const register = async (payload: RegisterPayload) => {
     const user = await apiRegister(payload)
     setUser(user)
   }

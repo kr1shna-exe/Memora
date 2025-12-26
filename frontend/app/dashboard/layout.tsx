@@ -1,13 +1,9 @@
 "use client";
 
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar, SidebarToggle, type Conversation } from "@/components/layout/sidebar";
-
-const mockUser = {
-  name: "John Doe",
-  email: "john@example.com",
-};
+import { useAuth } from "@/context/AuthContext";
 
 const mockConversations: Conversation[] = [
   {
@@ -69,10 +65,16 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, isLoading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/login");
+    }
+  }, [isLoading, user, router]);
 
   const createNewConversation = () => {
     setCurrentConversationId(null);
@@ -95,6 +97,16 @@ export default function DashboardLayout({
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0f0f10]">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   const contextValue: DashboardContextType = {
     conversations,
     currentConversationId,
@@ -109,7 +121,7 @@ export default function DashboardLayout({
     <DashboardContext.Provider value={contextValue}>
       <div className="flex h-screen bg-[#0f0f10]">
         <Sidebar
-          user={mockUser}
+          user={user}
           conversations={conversations}
           currentConversationId={currentConversationId}
           onNewChat={createNewConversation}
