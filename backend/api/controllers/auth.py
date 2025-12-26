@@ -1,12 +1,12 @@
 from datetime import timedelta, datetime
 from db.models.user import User
-from exports.types import UserSchema
+from exports.types import RegisterSchema, LoginSchema
 from sqlalchemy.orm import Session
 import jwt, bcrypt
 from fastapi import HTTPException, Request
 from config.settings import settings
 
-def create_user(user_data: UserSchema, db: Session):
+def create_user(user_data: RegisterSchema, db: Session):
     user_exists = db.query(User).filter(User.email == user_data.email).first()
     if user_exists:
         raise HTTPException(status_code=401, detail="User already exists")
@@ -27,7 +27,7 @@ def create_user(user_data: UserSchema, db: Session):
         raise HTTPException(status_code=401, detail="Failed to add the user")
 
 
-def get_user(user_data: UserSchema, db: Session):
+def get_user(user_data: LoginSchema, db: Session):
     user = db.query(User).filter(User.email == user_data.email).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")

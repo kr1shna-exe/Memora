@@ -1,19 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Brain, ArrowUpRight, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LandingPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("memora_token");
-    setIsLoggedIn(!!token);
-  }, []);
+  const isLoggedIn = !!user;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#030303]">

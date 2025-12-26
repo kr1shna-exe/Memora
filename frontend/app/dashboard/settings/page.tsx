@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "../layout";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SettingsPage() {
   const { sidebarCollapsed } = useDashboard();
+  const { user } = useAuth();
   const [profile, setProfile] = useState({
-    name: "John Doe",
-    email: "john@example.com",
+    name: user?.username || "",
+    email: user?.email || "",
   });
 
   return (
@@ -75,7 +77,7 @@ export default function SettingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2">
-                    Full Name
+                    Username
                   </label>
                   <input
                     type="text"

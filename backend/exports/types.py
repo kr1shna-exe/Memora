@@ -11,11 +11,14 @@ class SearchRequest(BaseModel):
     user_id: str
     query: str
 
-class UserSchema(BaseModel):
+class RegisterSchema(BaseModel):
     username: str = Field(min_length=3, max_length=10)
     email: EmailStr
     password: str = Field(min_length=4, max_length=10)
 
+class LoginSchema(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=4, max_length=10)
 
 class User(BaseModel):
     id: str

@@ -1,3 +1,8 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,4 +23,4 @@ app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(memory_router, prefix="/api/memory", tags=["memory"])
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("api.main:app", host="127.0.0.1", port=8000, reload=True)
