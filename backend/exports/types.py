@@ -26,6 +26,16 @@ class User(BaseModel):
     email: EmailStr
     password: str
 
+class MessageSchema(BaseModel):
+    role: str
+    content: str
+
+class ConversationCreate(BaseModel):
+    title: str
+
+class MessageCreate(BaseModel):
+    content: str
+
 class MemoryExtractionOutput(BaseModel):
     """Output format from LLM memory extraction"""
     facts: List[str] = Field(default_factory=list)
