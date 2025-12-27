@@ -1,9 +1,10 @@
 from datetime import timedelta, datetime
 from db.models.user import User
+from exports.sql_init import db_session
 from exports.types import RegisterSchema, LoginSchema
 from sqlalchemy.orm import Session
 import jwt, bcrypt
-from fastapi import HTTPException, Request
+from fastapi import Depends, HTTPException, Request
 from config.settings import settings
 
 def create_user(user_data: RegisterSchema, db: Session):
@@ -80,3 +81,7 @@ def get_current_user(request: Request, db: Session):
     except Exception as e:
         print(f"Error while authenticating user: {str(e)}")
         raise HTTPException(status_code=401, detail="Authentication Failed")
+
+def get_current_user_id(request: Request, db: Session = Depends(db_session)):
+    user = get_current_user(request, db)
+    return str(user["id"])

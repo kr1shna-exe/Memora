@@ -117,6 +117,20 @@ class MemoryStore:
     def delete_memory(self, memory_id: str):
         self.vector_store.delete(memory_id)
 
+    def delete_user_memory(self, memory_id: str, user_id: str):
+        try:
+            result = self.vector_store.get_by_id(memory_id)
+            if not result:
+                return False
+            payload = result.payload or {}
+            if payload.get("user_id") != user_id:
+                return False
+            self.vector_store.delete(memory_id)
+            return True
+        except Exception as e:
+            print(f"Error deleting Memory: {str(e)}")
+            return False
+
     def search_memories_with_scores(self, query: str, user_id: str, memory_type: Optional[MemoryType] = None, limit: int = 5):
         try:
             embed_query = self.embed.generate_embeddings(query)

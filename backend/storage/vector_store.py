@@ -45,3 +45,10 @@ class VectorStore:
                 filter=filter_,
                 limit=limit
                 )
+
+    def get_by_id(self, point_id: str):
+        results = self.client.retrieve(
+                collection_name=self.collection_name,
+                ids=[point_id]
+                )
+        return results[0] if results else None
