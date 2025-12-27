@@ -1,13 +1,13 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, Request
+from agents import MemoryAgent
 from db.models.user import Conversation, Message
 from api.controllers.auth import get_current_user
 from exports.types import ConversationCreate, MessageCreate
 from llm.orchestrator import LLMOrchestrator
 from llm.prompts import MEMORY_ANSWER_PROMPT
 from memory.memory_manager import MemoryManager
-from storage.memory_store import MemoryStore
 
 def get_user_conversations(request: Request, db: Session):
     user = get_current_user(request, db)
@@ -67,7 +67,7 @@ def delete_conversation(request: Request, conversation_id: int, db: Session):
 
 async def send_message(request: Request, conversation_id: int, data: MessageCreate, db: Session):
     user = get_current_user(request, db)
-    conversation = db.query(Conversation).filter(Conversation.id == conversation_id, Conversation.user_id == user["id"])
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id, Conversation.user_id == user["id"]).first()
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
     user_message = Message(
@@ -85,17 +85,10 @@ async def send_message(request: Request, conversation_id: int, data: MessageCrea
         role = "User" if msg.role == "user" else "Assistant"
         history_txt += f"{role}: {msg.content}\n"
     user_id = str(user["id"])
-    memorystore = MemoryStore()
-    relevant_memories = memorystore.search_memories(
-            query=data.content,
-            user_id = user_id,
-            limit=5
-            )
-    memory_txt = ""
-    if relevant_memories:
-        memories_text = "Relevant memories about the user:\n"
-        for mem in relevant_memories:
-            memory_txt += f"- {mem.content}\n"
+    query_with_context = f"Recent conversation:\n{history_txt}\n\nCurrent query: {data.content}"
+    memory_agent = MemoryAgent()
+    memory_txt = await memory_agent.query(query_with_context, user_id)
+
     prompt = f"""{MEMORY_ANSWER_PROMPT}
 
     {memory_txt}
@@ -122,8 +115,8 @@ async def send_message(request: Request, conversation_id: int, data: MessageCrea
     try:
         memory_manager = MemoryManager()
         message_for_extraction = [
-                {"role": "user", "content": user_message},
-                {"role": "assistant", "content": assistant_message}
+                {"role": "user", "content": data.content},
+                {"role": "assistant", "content": assistant_content}
                 ]
         await memory_manager.add_conversation(message_for_extraction, user_id)
     except Exception as e:

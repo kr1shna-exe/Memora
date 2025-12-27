@@ -15,6 +15,13 @@ class MemoryUpdater():
         self.memory_store = MemoryStore()
 
     async def update_memories(self, new_memories: List[Memory], user_id: str):
+        if not new_memories:
+            return {
+                    "added": [],
+                    "updated": [],
+                    "deleted": [],
+                    "unchanged": []
+                    }
         existing_memories = self.memory_store.user_memories(user_id)        
         if not existing_memories:
             for memory in new_memories:
