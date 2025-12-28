@@ -20,10 +20,10 @@ import { Avatar } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 
 export interface Conversation {
-  id: string;
+  id: number;
   title: string;
   lastMessage?: string;
-  updatedAt: Date;
+  updated_at: string;
 }
 
 interface ConversationGroup {
@@ -38,10 +38,10 @@ interface SidebarProps {
     avatar?: string;
   };
   conversations?: Conversation[];
-  currentConversationId?: string | null;
+  currentConversationId?: number | null;
   onNewChat?: () => void;
-  onSelectConversation?: (id: string) => void;
-  onDeleteConversation?: (id: string) => void;
+  onSelectConversation?: (id: number) => void;
+  onDeleteConversation?: (id: number) => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -62,7 +62,7 @@ function groupConversationsByDate(conversations: Conversation[]): ConversationGr
   ];
 
   conversations.forEach((conv) => {
-    const convDate = new Date(conv.updatedAt);
+    const convDate = new Date(conv.updated_at);
     if (convDate >= today) {
       groups[0].conversations.push(conv);
     } else if (convDate >= yesterday) {
@@ -91,7 +91,7 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [hoveredConversation, setHoveredConversation] = useState<string | null>(null);
+  const [hoveredConversation, setHoveredConversation] = useState<number | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { logout } = useAuth();

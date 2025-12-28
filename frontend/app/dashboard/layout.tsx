@@ -4,46 +4,16 @@ import { useState, createContext, useContext, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar, SidebarToggle, type Conversation } from "@/components/layout/sidebar";
 import { useAuth } from "@/context/AuthContext";
+import { getConversations, deleteConversation as apiDeleteConversation } from "@/lib/api/conversations";
 
-const mockConversations: Conversation[] = [
-  {
-    id: "1",
-    title: "Project architecture discussion",
-    updatedAt: new Date(),
-  },
-  {
-    id: "2",
-    title: "React hooks best practices",
-    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: "3",
-    title: "Database optimization tips",
-    updatedAt: new Date(Date.now() - 26 * 60 * 60 * 1000),
-  },
-  {
-    id: "4",
-    title: "API design patterns",
-    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: "5",
-    title: "TypeScript generics guide",
-    updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: "6",
-    title: "CSS Grid vs Flexbox",
-    updatedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-  },
-];
 
 interface DashboardContextType {
   conversations: Conversation[];
-  currentConversationId: string | null;
-  setCurrentConversationId: (id: string | null) => void;
+  setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>;
+  currentConversationId: number | null;
+  setCurrentConversationId: (id: number | null) => void;
   createNewConversation: () => void;
-  deleteConversation: (id: string) => void;
+  deleteConversation: (id: number) => void;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
 }
@@ -67,14 +37,28 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, isLoading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.replace("/login");
     }
   }, [isLoading, user, router]);
+
+  useEffect(() => {
+    async function fetchConversations() {
+      try {
+        const data = await getConversations()
+        setConversations(data)
+      } catch (error) {
+        console.log("Failed to fetch conversations:", error)
+      }
+    }
+    if (user) {
+      fetchConversations()
+    }
+  }, [user])
 
   const createNewConversation = () => {
     setCurrentConversationId(null);
@@ -83,17 +67,22 @@ export default function DashboardLayout({
     }
   };
 
-  const handleSelectConversation = (id: string) => {
+  const handleSelectConversation = (id: number) => {
     setCurrentConversationId(id);
     if (pathname !== "/dashboard") {
       router.push("/dashboard");
     }
   };
 
-  const deleteConversation = (id: string) => {
-    setConversations((prev) => prev.filter((c) => c.id !== id));
-    if (currentConversationId === id) {
-      setCurrentConversationId(null);
+  const deleteConversation = async (id: number) => {
+    try {
+      await apiDeleteConversation(id)
+      setConversations(prev => prev.filter(c => c.id !== id))
+      if (currentConversationId === id) {
+        setCurrentConversationId(null);
+      }
+    } catch (error) {
+      console.log("Failed to delete conversation:", error)
     }
   };
 
@@ -109,6 +98,7 @@ export default function DashboardLayout({
 
   const contextValue: DashboardContextType = {
     conversations,
+    setConversations,
     currentConversationId,
     setCurrentConversationId,
     createNewConversation,

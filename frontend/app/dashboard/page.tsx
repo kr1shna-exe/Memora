@@ -16,16 +16,17 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "./layout";
+import { getConversation, sendMessage, createConversation } from "@/lib/api/conversations";
 
 interface Message {
-  id: string;
+  id: number;
   role: "user" | "assistant";
   content: string;
-  timestamp: Date;
+  created_at: string;
 }
 
 export default function ChatPage() {
-  const { currentConversationId, sidebarCollapsed } = useDashboard();
+  const { currentConversationId, setCurrentConversationId, setConversations, sidebarCollapsed } = useDashboard();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -48,39 +49,34 @@ export default function ChatPage() {
   }, [input]);
 
   useEffect(() => {
-    if (currentConversationId) {
-      setMessages([
-        {
-          id: "1",
-          role: "user",
-          content: "Can you explain how React hooks work?",
-          timestamp: new Date(Date.now() - 60000),
-        },
-        {
-          id: "2",
-          role: "assistant",
-          content:
-            "React Hooks are functions that let you use state and other React features in functional components. The most common hooks are:\n\n**useState** - Adds state to functional components\n**useEffect** - Handles side effects like data fetching\n**useContext** - Accesses context values\n**useRef** - Creates mutable references\n\nWould you like me to explain any of these in more detail?",
-          timestamp: new Date(Date.now() - 30000),
-        },
-      ]);
-    } else {
+    if (!currentConversationId) {
       setMessages([]);
+      return;
     }
+    const convId = currentConversationId
+    async function fetchMessages() {
+      try {
+        const data = await getConversation(convId);
+        setMessages(data.messages);
+      } catch (error) {
+        console.log("Failed to fetch messages", error);
+      }
+    }
+    fetchMessages();
   }, [currentConversationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isTyping) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
+    const content = input.trim()
+    const tempId = Date.now()
+    const tempUserMsg: Message = {
+      id: tempId,
       role: "user",
-      content: input.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+      content,
+      created_at: new Date().toISOString()
+    }
+    setMessages((prev) => [...prev, tempUserMsg]);
     setInput("");
     setIsTyping(true);
 
@@ -88,17 +84,27 @@ export default function ChatPage() {
       textareaRef.current.style.height = "auto";
     }
 
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content:
-          "I've noted that information and stored it in your memory. This response is simulated - in the real application, I would process your message, extract relevant memories, and provide a personalized response based on our conversation history.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsTyping(false);
-    }, 1500);
+    try {
+      let convId = currentConversationId
+      if (!convId) {
+        const title = content.length > 50 ? content.slice(0, 50) + "..." : content
+        const newConv = await createConversation(title)
+        setConversations(prev => [newConv, ...prev])
+        convId = newConv.id
+        setCurrentConversationId(convId)
+      }
+      const response = await sendMessage(convId, content)
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== tempId),
+        response.user_message,
+        response.assistant_message
+      ])
+    } catch (error) {
+      console.log("Failed to send the message:", error)
+      setMessages(prev => prev.filter(m => m.id !== tempId))
+    } finally {
+      setIsTyping(false)
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
