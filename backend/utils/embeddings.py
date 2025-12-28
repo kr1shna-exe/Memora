@@ -1,7 +1,11 @@
+import os
 from langchain_openai import OpenAIEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from config.settings import settings
 from typing import List
+
+if settings.GEMINI_API_KEY:
+    os.environ["GOOGLE_API_KEY"] = settings.GEMINI_API_KEY.get_secret_value()
 
 class EmbeddingGenerator:
     def generate_embeddings(self, text: str) -> List[float]:

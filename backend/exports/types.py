@@ -81,8 +81,8 @@ class OpenAIModel(Enum):
     GPT_5 = "gpt-5"
 
 class GeminiModel(Enum):
-    FLASH = "gemini-2.0-flash"
-    PRO = "gemini-2.0-pro"
+    FLASH = "gemini-2.5-flash"
+    PRO = "gemini-2.5-pro"
 
 class GroqModel(Enum):
     LLAMA_70B = "llama-3.3-70b-versatile"

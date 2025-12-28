@@ -22,7 +22,7 @@ class Conversation(Base):
     updated_at: Mapped[datetime] = mapped_column(default=datetime.now, onupdate=datetime.now)
     user_id: Mapped[int] = mapped_column(ForeignKey("Users.id"))
     user: Mapped[User] = relationship(back_populates="conversations")
-    messages: Mapped[List["Message"]] = relationship(back_populates="conversation")
+    messages: Mapped[List["Message"]] = relationship(back_populates="conversation", cascade="all, delete-orphan")
 
 class Message(Base):
     __tablename__ = "Messages"

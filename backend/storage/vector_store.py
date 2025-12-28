@@ -25,13 +25,14 @@ class VectorStore:
             ])
 
     def search(self, vector: list[float], filter_: Filter, limit: int = 5):
-        return self.client.query_points(
+        results = self.client.query_points(
                 collection_name=self.collection_name,
-                vector=vector,
-                filter=filter_,
+                query=vector,
+                query_filter=filter_,
                 with_payload=True,
                 limit=limit
                 )
+        return results.points
 
     def delete(self, point_id: str):
         self.client.delete(
@@ -40,11 +41,12 @@ class VectorStore:
                 )
 
     def vector_scroll(self, filter_: Filter, limit: int = 5):
-        return self.client.scroll(
+        points, _ = self.client.scroll(
                 collection_name=self.collection_name,
-                filter=filter_,
+                scroll_filter=filter_,
                 limit=limit
                 )
+        return points
 
     def get_by_id(self, point_id: str):
         results = self.client.retrieve(
