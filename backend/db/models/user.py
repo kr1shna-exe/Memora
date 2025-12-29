@@ -12,6 +12,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(unique = True)
     username: Mapped[str] = mapped_column(String(15), unique = True)
     password: Mapped[str]
+    patterns_json: Mapped[str | None] = mapped_column(nullable=True)
     conversations: Mapped[List["Conversation"]] = relationship(back_populates="user")
 
 class Conversation(Base):

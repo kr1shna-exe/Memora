@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -14,71 +14,13 @@ import {
   ChevronLeft,
   ExternalLink,
   Brain,
+  Loader2,
 } from "lucide-react";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useDashboard } from "../layout";
+import { getMemories, deleteMemories, type Memory } from "@/lib/api/memories";
 
-type MemoryType = "all" | "episodic" | "semantic" | "procedural";
-
-interface Memory {
-  id: string;
-  content: string;
-  type: "episodic" | "semantic" | "procedural";
-  timestamp: Date;
-  tags: string[];
-  source?: string;
-}
-
-const mockMemories: Memory[] = [
-  {
-    id: "1",
-    content: "User prefers dark mode in all applications and websites",
-    type: "semantic",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    tags: ["preference", "ui"],
-  },
-  {
-    id: "2",
-    content:
-      "Had a meeting with the design team about the new dashboard layout. Key decisions: use card-based layout, implement dark mode, add keyboard shortcuts.",
-    type: "episodic",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    tags: ["meeting", "design", "dashboard"],
-    source: "Chat - Dec 24",
-  },
-  {
-    id: "3",
-    content:
-      "User typically starts work around 9 AM and prefers morning for deep work sessions",
-    type: "procedural",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    tags: ["work pattern", "schedule"],
-  },
-  {
-    id: "4",
-    content: "Favorite programming languages: TypeScript, Python, Rust",
-    type: "semantic",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
-    tags: ["programming", "skills"],
-  },
-  {
-    id: "5",
-    content:
-      "Discussed project timeline for Q1 2025. Main milestones: MVP by Jan 15, Beta by Feb 1, Launch by Feb 28.",
-    type: "episodic",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
-    tags: ["project", "timeline", "planning"],
-    source: "Chat - Dec 22",
-  },
-  {
-    id: "6",
-    content:
-      "User responds better to bullet points and concise explanations rather than long paragraphs",
-    type: "procedural",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
-    tags: ["communication", "preference"],
-  },
-];
+type MemoryFilter = "all" | "episodic" | "semantic" | "procedural"
 
 const memoryTypeConfig = {
   episodic: {
@@ -105,43 +47,78 @@ const memoryTypeConfig = {
     border: "border-emerald-500/20",
     gradient: "from-emerald-500/20 to-emerald-600/10",
   },
-};
+}
 
 export default function MemoriesPage() {
   const { sidebarCollapsed } = useDashboard();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<MemoryType>("all");
+  const [activeFilter, setActiveFilter] = useState<MemoryFilter>("all");
   const [selectedMemory, setSelectedMemory] = useState<string | null>(null);
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const filteredMemories = mockMemories.filter((memory) => {
-    const matchesSearch =
-      memory.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      memory.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  useEffect(() => {
+    async function fetchMemories() {
+      try {
+        setIsLoading(true);
+        const data = await getMemories();
+        setMemories(data)
+      } catch (error) {
+        console.log("Failed to fetch memories", error)
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchMemories();
+  }, [])
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteMemories(id);
+      setMemories((prev) => prev.filter((m) => m.id !== id))
+      if (selectedMemory === id) setSelectedMemory(null);
+    } catch (error) {
+      console.log("Failed to delete memory", error)
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const filteredMemories = memories.filter((memory) => {
+    const matchesSearch = memory.content.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
       activeFilter === "all" || memory.type === activeFilter;
     return matchesSearch && matchesFilter;
   });
 
-  const filters: { value: MemoryType; label: string; count: number }[] = [
-    { value: "all", label: "All", count: mockMemories.length },
+  const filters: { value: MemoryFilter; label: string; count: number }[] = [
+    { value: "all", label: "All", count: memories.length },
     {
       value: "episodic",
       label: "Episodic",
-      count: mockMemories.filter((m) => m.type === "episodic").length,
+      count: memories.filter((m) => m.type === "episodic").length,
     },
     {
       value: "semantic",
       label: "Semantic",
-      count: mockMemories.filter((m) => m.type === "semantic").length,
+      count: memories.filter((m) => m.type === "semantic").length,
     },
     {
       value: "procedural",
       label: "Procedural",
-      count: mockMemories.filter((m) => m.type === "procedural").length,
+      count: memories.filter((m) => m.type === "procedural").length,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-[#0a0a0b]">
+        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col bg-[#0a0a0b]">
@@ -239,8 +216,19 @@ export default function MemoriesPage() {
                       <Icon className={cn("h-5 w-5", config.color)} />
                     </div>
                     <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button className="rounded-lg p-1.5 text-zinc-500 hover:bg-white/10 hover:text-zinc-200 transition-all duration-200">
-                        <MoreVertical className="h-4 w-4" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(memory.id);
+                        }}
+                        disabled={deletingId === memory.id}
+                        className="rounded-lg p-1.5 text-zinc-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
+                      >
+                        {deletingId === memory.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -249,27 +237,10 @@ export default function MemoriesPage() {
                     {memory.content}
                   </p>
 
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {memory.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-white/5 border border-white/10 px-2.5 py-0.5 text-xs text-zinc-400"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-between pt-4 border-t border-white/5">
+                  <div className="mt-4 flex items-center pt-4 border-t border-white/5">
                     <span className="text-xs text-zinc-500">
                       {formatRelativeTime(memory.timestamp)}
                     </span>
-                    {memory.source && (
-                      <span className="flex items-center gap-1.5 text-xs text-zinc-500">
-                        <ExternalLink className="h-3 w-3" />
-                        {memory.source}
-                      </span>
-                    )}
                   </div>
                 </div>
               </motion.div>
@@ -286,7 +257,9 @@ export default function MemoriesPage() {
               No memories found
             </h3>
             <p className="mt-2 text-sm text-zinc-500 max-w-sm">
-              Try adjusting your search or filter criteria to find what you're looking for
+              {memories.length === 0
+                ? "Start chatting to create memories"
+                : "Try adjusting your search or filter criteria"}
             </p>
           </div>
         )}

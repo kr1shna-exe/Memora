@@ -86,12 +86,13 @@ export default function ChatPage() {
 
     try {
       let convId = currentConversationId
+      let isNewConversation = false
       if (!convId) {
         const title = content.length > 50 ? content.slice(0, 50) + "..." : content
         const newConv = await createConversation(title)
         setConversations(prev => [newConv, ...prev])
         convId = newConv.id
-        setCurrentConversationId(convId)
+        isNewConversation = true
       }
       const response = await sendMessage(convId, content)
       setMessages(prev => [
@@ -99,6 +100,9 @@ export default function ChatPage() {
         response.user_message,
         response.assistant_message
       ])
+      if (isNewConversation) {
+        setCurrentConversationId(convId)
+      }
     } catch (error) {
       console.log("Failed to send the message:", error)
       setMessages(prev => prev.filter(m => m.id !== tempId))

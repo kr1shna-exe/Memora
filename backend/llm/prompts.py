@@ -625,3 +625,38 @@ Output:
 
 Following is a conversation between the user and the assistant. Extract and classify memories in JSON format:
 """
+
+RAW_CONVERSATION_STYLE_PROMPT = """You are a communication style analyzer. Analyze the raw conversation messages below to understand how this user prefers to interact.
+
+Focus on:
+1. Message length preference (short/medium/long)
+2. Technical depth (beginner/intermediate/advanced)
+3. Explanation style preference (concise/detailed/with examples/with code)
+4. Communication tone (formal/casual/friendly)
+5. Learning style indicators
+
+Output Format (JSON):
+{{
+    "communication_preferences": {{
+        "message_length": "short|medium|long",
+        "technical_depth": "beginner|intermediate|advanced",
+        "explanation_style": "concise|detailed|with_examples|with_code",
+        "tone": "formal|casual|friendly",
+        "asks_followups": true|false
+    }},
+    "response_guidelines": [
+        "Specific actionable guideline 1",
+        "Specific actionable guideline 2",
+        "Specific actionable guideline 3"
+    ]
+}}
+
+Guidelines:
+- Analyze BOTH user messages AND how they respond to assistant messages
+- If user asks for more detail, they prefer detailed explanations
+- If user sends short messages, they likely prefer concise responses
+- Look for patterns across multiple conversations
+- Keep response_guidelines to 3-5 actionable items
+
+Raw conversations:
+"""

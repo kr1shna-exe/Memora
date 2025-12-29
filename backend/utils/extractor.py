@@ -4,7 +4,7 @@ from llm.orchestrator import LLMOrchestrator
 from llm.prompts import MEMORY_EXTRACTION_WITH_TYPES_PROMPT
 from datetime import datetime
 from typing import Dict, List
-import uuid, json
+import uuid, json, re
 
 class MemoryExtractor:
     def __init__(self):
@@ -42,13 +42,27 @@ class MemoryExtractor:
         return memories
 
 
+    def _extract_json_from_response(self, response: str) -> dict:
+        if not response or not response.strip():
+            return {"memories": []}
+
+        markdown_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response, re.DOTALL)
+        if markdown_match:
+            return json.loads(markdown_match.group(1))
+
+        raw_match = re.search(r"(\{.*\})", response, re.DOTALL)
+        if raw_match:
+            return json.loads(raw_match.group(1))
+
+        return {"memories": []}
+
     async def extract_from_conversation(self, messages, user_id):
         conversation_text = self._format_conversation(messages)
         full_prompt = f"{MEMORY_EXTRACTION_WITH_TYPES_PROMPT}\n\n{conversation_text}"
         llm_response = await self.llm_orchestrator.ai_invoke(full_prompt)
         normalized_response = normalize_llm_response(llm_response)
         try:
-            parsed = json.loads(normalized_response)
+            parsed = self._extract_json_from_response(normalized_response)
             extraction = MemoryExtractionWithTypes.model_validate(parsed)
             memories = self._extraction_to_memories(extraction, user_id)
             return memories

@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Union
 from langchain.tools import tool
 from exports.types import Memory
 from memory.episodic_mem import EpisodicMemory
@@ -16,7 +16,7 @@ def format_memories_for_llm(memories: Sequence[Memory]) -> str:
     return "\n".join(formatted)
 
 @tool
-def get_recent_memories(user_id: str, days: int = 7) -> str:
+def get_recent_memories(user_id: str, days: Union[int, str] = 7) -> str:
     """Get recent memories from last N days
 
     Use this tool when the user asks about:
@@ -32,7 +32,7 @@ def get_recent_memories(user_id: str, days: int = 7) -> str:
         Formatted string of recent memories
     """
     episodic = EpisodicMemory()
-    memories = episodic.get_recent_memory(user_id, days)
+    memories = episodic.get_recent_memory(user_id, int(days))
     return format_memories_for_llm(memories)
 
 

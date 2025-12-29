@@ -5,7 +5,7 @@ from langchain.agents import create_agent
 from typing import Dict
 
 class MemoryAgent:
-    def __init__(self, provider: LLMProvider = LLMProvider.GEMINI, system_prompt: str | None = None, user_patterns: Dict | None = None):
+    def __init__(self, provider: LLMProvider = LLMProvider.GROQ, system_prompt: str | None = None, user_patterns: Dict | None = None):
         self.llm_orchestrator = LLMOrchestrator()
         self.provider = provider
         self.tools = [

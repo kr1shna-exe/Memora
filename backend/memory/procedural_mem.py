@@ -1,10 +1,10 @@
 from llm.orchestrator import LLMOrchestrator
-from llm.prompts import PATTERN_DETECTION_PROMPT, PREFERENCE_ANALYSIS_PROMPT, CONVERSATION_STYLE_ANALYSIS_PROMPT
+from llm.prompts import PATTERN_DETECTION_PROMPT, PREFERENCE_ANALYSIS_PROMPT, CONVERSATION_STYLE_ANALYSIS_PROMPT, RAW_CONVERSATION_STYLE_PROMPT
 from storage.memory_store import MemoryStore
 from exports.parser import normalize_llm_response
-from typing import List, Dict
+from typing import List, Dict, Any
 from exports.types import MemoryType
-import json
+import json, re
 
 class ProceduralMemory:
     def __init__(self):
@@ -114,5 +114,63 @@ class ProceduralMemory:
             "preferences": preferences,
             "conversation_style": conversation_style
         }
+
+    def _format_raw_conversations(self, conversations: List) -> str:
+        formatted = []
+        for conv in conversations:
+            formatted.append(f"\n--- Conversation: {conv.title} ---")
+            for msg in conv.messages:
+                role = "User" if msg.role == "user" else "Assistant"
+                formatted.append(f"{role}: {msg.content}")
+        return "\n".join(formatted)
+
+    def _extract_json_from_response(self, response: str) -> dict:
+        if not response or not response.strip():
+            return {}
+        markdown_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response, re.DOTALL)
+        if markdown_match:
+            return json.loads(markdown_match.group(1))
+        raw_match = re.search(r"(\{.*\})", response, re.DOTALL)
+        if raw_match:
+            return json.loads(raw_match.group(1))
+        return {}
+
+    async def analyze_from_raw_conversations(self, conversations: List, current_conversation_id: int) -> Dict:
+        if not conversations:
+            return {
+                "analyzed_up_to_conversation_id": current_conversation_id,
+                "patterns": {
+                    "communication_preferences": {
+                        "message_length": "medium",
+                        "technical_depth": "intermediate",
+                        "explanation_style": "detailed",
+                        "tone": "friendly",
+                        "asks_followups": True
+                    },
+                    "response_guidelines": []
+                }
+            }
+
+        formatted_conversations = self._format_raw_conversations(conversations)
+        full_prompt = f"{RAW_CONVERSATION_STYLE_PROMPT}\n{formatted_conversations}"
+
+        llm_response = await self.llm_orchestrator.ai_invoke(full_prompt)
+        normalized_response = normalize_llm_response(llm_response)
+
+        try:
+            patterns = self._extract_json_from_response(normalized_response)
+            return {
+                "analyzed_up_to_conversation_id": current_conversation_id,
+                "patterns": patterns
+            }
+        except Exception as e:
+            print(f"Error parsing raw conversation analysis: {e}")
+            return {
+                "analyzed_up_to_conversation_id": current_conversation_id,
+                "patterns": {
+                    "communication_preferences": {},
+                    "response_guidelines": []
+                }
+            }
 
 
