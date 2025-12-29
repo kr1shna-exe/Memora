@@ -7,12 +7,8 @@ import {
   Search,
   Clock,
   Layers,
-  TrendingUp,
-  Calendar,
-  MoreVertical,
   Trash2,
   ChevronLeft,
-  ExternalLink,
   Brain,
   Loader2,
 } from "lucide-react";
@@ -20,7 +16,7 @@ import { cn, formatRelativeTime } from "@/lib/utils";
 import { useDashboard } from "../layout";
 import { getMemories, deleteMemories, type Memory } from "@/lib/api/memories";
 
-type MemoryFilter = "all" | "episodic" | "semantic" | "procedural"
+type MemoryFilter = "all" | "episodic" | "semantic"
 
 const memoryTypeConfig = {
   episodic: {
@@ -38,14 +34,6 @@ const memoryTypeConfig = {
     bg: "bg-amber-500/10",
     border: "border-amber-500/20",
     gradient: "from-amber-500/20 to-amber-600/10",
-  },
-  procedural: {
-    label: "Procedural",
-    icon: TrendingUp,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
-    gradient: "from-emerald-500/20 to-emerald-600/10",
   },
 }
 
@@ -104,11 +92,6 @@ export default function MemoriesPage() {
       value: "semantic",
       label: "Semantic",
       count: memories.filter((m) => m.type === "semantic").length,
-    },
-    {
-      value: "procedural",
-      label: "Procedural",
-      count: memories.filter((m) => m.type === "procedural").length,
     },
   ];
 

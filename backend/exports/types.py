@@ -56,7 +56,6 @@ class MemoryExtractionWithTypes(BaseModel):
 class MemoryType(Enum):
     SEMANTIC = "semantic"
     EPISODIC = "episodic"
-    PROCEDURAL = "procedural"
 
 class Memory(BaseModel):
     id: str

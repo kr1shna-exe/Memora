@@ -2,8 +2,7 @@ import api from "./client"
 
 enum MemoryType {
   EPISODIC = "episodic",
-  SEMANTIC = "semantic",
-  PROCEDURAL = "procedural"
+  SEMANTIC = "semantic"
 }
 
 interface MemoryResponse {
