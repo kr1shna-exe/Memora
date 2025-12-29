@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, Request
+from fastapi.responses import StreamingResponse
 from agents import MemoryAgent
 from db.models.user import Conversation, Message, User
 from api.controllers.auth import get_current_user
@@ -183,3 +184,101 @@ async def send_message(request: Request, conversation_id: int, data: MessageCrea
             "created_at": assistant_message.created_at.isoformat()
         }
     }
+
+async def send_message_stream(request: Request, conversation_id: int, data: MessageCreate, db: Session):
+    user = get_current_user(request, db)
+    user_obj = db.query(User).filter(User.id == user["id"]).first()
+    if not user_obj:
+        raise HTTPException(status_code=404, detail="User not found")
+    conversation = db.query(Conversation).filter(
+        Conversation.id == conversation_id,
+        Conversation.user_id == user["id"]
+    ).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    user_message = Message(
+        role="user",
+        content=data.content,
+        conversation_id=conversation_id
+    )
+    db.add(user_message)
+    db.commit()
+    db.refresh(user_message)
+
+    history = db.query(Message).filter(
+        Message.conversation_id == conversation_id
+    ).order_by(Message.created_at.desc()).limit(4).all()
+    history = list(reversed(history))
+    history_txt = ""
+    for msg in history[:-1]:
+        role = "User" if msg.role == "user" else "Assistant"
+        history_txt += f"{role}: {msg.content}\n"
+
+    user_id = str(user["id"])
+    user_msg_data = {
+        "id": user_message.id,
+        "role": "user",
+        "content": user_message.content,
+        "created_at": user_message.created_at.isoformat()
+    }
+
+    async def event_generator():
+        yield f"data: {json.dumps({'type': 'user_message', 'data': user_msg_data})}\n\n"
+
+        query_with_context = f"Recent conversation:\n{history_txt}\n\nCurrent query: {data.content}"
+        memory_agent = MemoryAgent()
+        memory_txt = await memory_agent.query(query_with_context, user_id)
+
+        patterns_context = _get_patterns_context(user_obj)
+
+        prompt = f"""{MEMORY_ANSWER_PROMPT}
+
+        {memory_txt}
+
+        {patterns_context}
+
+        Conversation history:
+        {history_txt}
+
+        User: {data.content}
+
+        Provide a helpful, personalized response based on the memories and conversation context.
+        """
+
+        llm_orchestrator = LLMOrchestrator()
+        full_response = ""
+
+        async for chunk in llm_orchestrator.ai_stream(prompt):
+            full_response += chunk
+            yield f"data: {json.dumps({'type': 'chunk', 'data': chunk})}\n\n"
+
+        assistant_message = Message(
+            role="assistant",
+            content=full_response,
+            conversation_id=conversation_id
+        )
+        db.add(assistant_message)
+        conversation.updated_at = datetime.now()
+        db.commit()
+        db.refresh(assistant_message)
+
+        yield f"data: {json.dumps({'type': 'done', 'data': {'id': assistant_message.id, 'created_at': assistant_message.created_at.isoformat()}})}\n\n"
+
+        try:
+            memory_manager = MemoryManager()
+            message_for_extraction = [
+                {"role": "user", "content": data.content},
+                {"role": "assistant", "content": full_response}
+            ]
+            await memory_manager.add_conversation(message_for_extraction, user_id)
+        except Exception as e:
+            print(f"Memory Extraction Failed: {str(e)}")
+
+        await _maybe_update_patterns(user_obj, conversation_id, db)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+    )

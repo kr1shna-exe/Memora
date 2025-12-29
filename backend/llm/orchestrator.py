@@ -22,6 +22,15 @@ class LLMOrchestrator:
         client = LLMClient(provider=provider, model=model_name)
         return await client.invoke(prompt)
 
+    async def ai_stream(self, prompt: str, provider = None, model_name = None):
+        if provider is None or model_name is None:
+            auto_provider, auto_model = self._model_selection(prompt)
+            provider = provider or auto_provider
+            model_name = model_name or auto_model
+        client = LLMClient(provider=provider, model=model_name)
+        async for chunk in client.stream(prompt):
+            yield chunk
+
     def get_agent_model(self, provider: LLMProvider | None = None, model_name: str | None = None):
         if provider is None:
             provider = self.default_provider

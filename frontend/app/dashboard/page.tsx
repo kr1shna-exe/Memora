@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "./layout";
-import { getConversation, sendMessage, createConversation } from "@/lib/api/conversations";
+import { getConversation, createConversation, streamMessage } from "@/lib/api/conversations";
 
 interface Message {
   id: number;
@@ -30,6 +30,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -68,15 +69,8 @@ export default function ChatPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isTyping) return;
-    const content = input.trim()
-    const tempId = Date.now()
-    const tempUserMsg: Message = {
-      id: tempId,
-      role: "user",
-      content,
-      created_at: new Date().toISOString()
-    }
-    setMessages((prev) => [...prev, tempUserMsg]);
+
+    const content = input.trim();
     setInput("");
     setIsTyping(true);
 
@@ -85,29 +79,53 @@ export default function ChatPage() {
     }
 
     try {
-      let convId = currentConversationId
-      let isNewConversation = false
+      let convId = currentConversationId;
+      let isNewConversation = false;
+
       if (!convId) {
-        const title = content.length > 50 ? content.slice(0, 50) + "..." : content
-        const newConv = await createConversation(title)
-        setConversations(prev => [newConv, ...prev])
-        convId = newConv.id
-        isNewConversation = true
+        const title = content.length > 50 ? content.slice(0, 50) + "..." : content;
+        const newConv = await createConversation(title);
+        setConversations((prev) => [newConv, ...prev]);
+        convId = newConv.id;
+        isNewConversation = true;
       }
-      const response = await sendMessage(convId, content)
-      setMessages(prev => [
-        ...prev.filter(m => m.id !== tempId),
-        response.user_message,
-        response.assistant_message
-      ])
+
+      await streamMessage(
+        convId,
+        content,
+        (userMsg) => {
+          setMessages((prev) => [...prev, userMsg]);
+          setIsStreaming(true);
+          setIsTyping(false);
+        },
+        (chunk) => {
+          setMessages((prev) => {
+            const lastMsg = prev[prev.length - 1];
+            if (!lastMsg || lastMsg.role !== "assistant" || lastMsg.id !== -1) {
+              return [
+                ...prev,
+                { id: -1, role: "assistant" as const, content: chunk, created_at: new Date().toISOString() }
+              ];
+            }
+            return [...prev.slice(0, -1), { ...lastMsg, content: lastMsg.content + chunk }];
+          });
+        },
+        (doneData) => {
+          setMessages((prev) =>
+            prev.map((msg) => msg.id === -1 ? { ...msg, id: doneData.id, created_at: doneData.created_at } : msg)
+          );
+          setIsStreaming(false);
+        }
+      );
+
       if (isNewConversation) {
-        setCurrentConversationId(convId)
+        setCurrentConversationId(convId);
       }
     } catch (error) {
-      console.log("Failed to send the message:", error)
-      setMessages(prev => prev.filter(m => m.id !== tempId))
+      console.log("Failed to send the message:", error);
     } finally {
-      setIsTyping(false)
+      setIsTyping(false);
+      setIsStreaming(false);
     }
   };
 
@@ -213,7 +231,7 @@ export default function ChatPage() {
               ))}
             </AnimatePresence>
 
-            {isTyping && (
+            {isTyping && !isStreaming && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
