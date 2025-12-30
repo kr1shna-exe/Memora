@@ -3,7 +3,7 @@ from llm.providers import LLMClient
 
 
 class LLMOrchestrator:
-    def __init__(self, default_provider: LLMProvider = LLMProvider.GROQ, default_model: dict[LLMProvider, str] | None = None):
+    def __init__(self, default_provider: LLMProvider = LLMProvider.GEMINI, default_model: dict[LLMProvider, str] | None = None):
         self.default_provider = default_provider
         self.default_model = default_model or {
                 LLMProvider.GEMINI: GeminiModel.FLASH.value,
@@ -12,7 +12,7 @@ class LLMOrchestrator:
                 }
 
     def _model_selection(self, text: str):
-        return LLMProvider.GROQ, GroqModel.LLAMA_70B.value
+        return LLMProvider.GEMINI, GeminiModel.FLASH.value
 
     async def ai_invoke(self, prompt: str, provider = None, model_name = None):
         if provider is None or model_name is None:

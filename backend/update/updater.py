@@ -7,12 +7,30 @@ from storage.memory_store import MemoryStore
 from datetime import datetime
 from update.dedup import MemoryDeduplicator
 import json
+import re
 
 class MemoryUpdater():
     def __init__(self):
         self.llm_orchestrator = LLMOrchestrator()
         self.deduplicator = MemoryDeduplicator()
         self.memory_store = MemoryStore()
+
+    def _extract_json_from_response(self, response: str) -> dict:
+        """Extract JSON from response, handling markdown code blocks."""
+        if not response or not response.strip():
+            return {"memory": []}
+
+        # Try markdown code block first
+        markdown_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", response, re.DOTALL)
+        if markdown_match:
+            return json.loads(markdown_match.group(1))
+
+        # Try raw JSON
+        raw_match = re.search(r"(\{.*\})", response, re.DOTALL)
+        if raw_match:
+            return json.loads(raw_match.group(1))
+
+        return {"memory": []}
 
     async def update_memories(self, new_memories: List[Memory], user_id: str):
         if not new_memories:
@@ -51,8 +69,19 @@ class MemoryUpdater():
         """
         llm_response = await self.llm_orchestrator.ai_invoke(prompt)
         normalized_response = normalize_llm_response(llm_response)
-        parsed = json.loads(normalized_response)
-        memory_updates = parsed["memory"]
+
+        if not normalized_response or not normalized_response.strip():
+            print("LLM returned empty response for memory update")
+            return {"added": [], "updated": [], "deleted": [], "unchanged": []}
+
+        try:
+            parsed = self._extract_json_from_response(normalized_response)
+        except (json.JSONDecodeError, Exception) as e:
+            print(f"Failed to parse LLM response as JSON: {e}")
+            print(f"Raw response: {normalized_response[:200]}...")
+            return {"added": [], "updated": [], "deleted": [], "unchanged": []}
+
+        memory_updates = parsed.get("memory", [])
 
         added = []
         updated = []

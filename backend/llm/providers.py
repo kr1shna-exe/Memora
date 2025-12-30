@@ -16,21 +16,24 @@ class LLMClient():
             return ChatGoogleGenerativeAI(
                     model=model,
                     google_api_key=settings.GEMINI_API_KEY,
-                    temperature=0.2
+                    temperature=0.2,
+                    streaming=True
                     )
         elif self.provider == LLMProvider.GROQ:
             model = self.model_name or GroqModel.LLAMA_70B.value
             return ChatGroq(
                     model=model,
                     api_key=settings.GROQ_API_KEY,
-                    temperature=0.2
+                    temperature=0.2,
+                    streaming=True
                     )
         elif self.provider == LLMProvider.OPENAI:
             model = self.model_name or OpenAIModel.GPT_4O_MINI.value
             return ChatOpenAI(
                     model=model,
                     api_key=settings.OPENAI_API_KEY,
-                    temperature=0.2
+                    temperature=0.2,
+                    streaming=True
                     )
         else:
             raise ValueError(f"Unsupported Provider: {self.provider}")

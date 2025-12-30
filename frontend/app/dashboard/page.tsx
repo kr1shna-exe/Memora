@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Send,
   Brain,
@@ -178,14 +178,10 @@ export default function ChatPage() {
           </div>
         ) : (
           <div className="mx-auto max-w-3xl px-4 py-6">
-            <AnimatePresence initial={false}>
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+            <>
+              {messages.map((message, index) => (
+                <div
+                  key={`message-${index}`}
                   className={cn(
                     "mb-6",
                     message.role === "user" ? "flex justify-end" : ""
@@ -227,9 +223,9 @@ export default function ChatPage() {
                       </div>
                     </div>
                   )}
-                </motion.div>
+                </div>
               ))}
-            </AnimatePresence>
+            </>
 
             {isTyping && !isStreaming && (
               <motion.div

@@ -1,14 +1,34 @@
 from datetime import datetime
 
 MEMORY_ANSWER_PROMPT = """
-You are an expert at answering questions based on the provided memories. Your task is to provide accurate and concise answers to the questions by leveraging the information given in the memories.
+You are Memora, a fully capable AI assistant that can answer ANY question, explain concepts, write code, and help with any task - just like ChatGPT or Claude.
 
-Guidelines:
-- Extract relevant information from the memories based on the question.
-- If no relevant information is found, make sure you don't say no information is found. Instead, accept the question and provide a general response.
-- Ensure that the answers are clear, concise, and directly address the question.
+You also have access to memories about the user to personalize your responses.
 
-Here are the details of the task:
+# Your Primary Role:
+- ANSWER the user's question directly and thoroughly
+- EXPLAIN concepts when asked (any topic - technical, general, anything)
+- HELP with tasks, coding, writing, analysis - whatever the user needs
+- USE memories only as additional context to personalize your response
+
+# How to Use Memories:
+The memories below are facts ABOUT THE USER. Use them to make your responses more personalized:
+- If user is working on a project → You can relate explanations to their project
+- If user has certain preferences → Adapt your response style accordingly
+- If no relevant memories → Just answer normally, don't mention lack of memories
+
+# IMPORTANT - What NOT to Do:
+- NEVER say "I can only retrieve memories" or "I can't explain new concepts"
+- NEVER refuse to answer questions because there's no memory about it
+- NEVER focus on memories instead of answering the actual question
+- You are NOT just a memory retrieval tool - you are a full AI assistant
+
+# Examples:
+- User asks to explain a concept → Explain it thoroughly (use memories to personalize if relevant)
+- User asks for help with code → Write the code (reference their projects if relevant)
+- User asks "What do you know about me?" → Then use the memories to tell them
+
+User memories (use for personalization, not as your only source of answers):
 """
 
 AGENT_MEMORY_EXTRACTION_PROMPT = f"""You are an Assistant Information Organizer, specialized in accurately storing facts, preferences, and characteristics about the AI assistant from conversations. 
@@ -482,145 +502,184 @@ MEMORY_EXTRACTION_WITH_TYPES_PROMPT = f"""You are a Personal Information Organiz
 Your task is to extract relevant information from conversations AND classify each fact by type:
 
 # Memory Types:
-1. **SEMANTIC**: Timeless facts, preferences, personal details that don't change over time
-    - Examples: "User is a software engineer", "Loves pizza", "Name is John", "Prefers detailed explanations"
 
-2. **EPISODIC**: Time-bound events, specific experiences that happened at a particular time
-    - Examples: "Had meeting with John yesterday", "Discussed project on Monday", "Started learning Python last week"
+1. **SEMANTIC**: Permanent facts about the user that remain true over time
+    - Identity: name, profession, location, age
+    - Stable preferences: "Loves pizza", "Hates mornings", "Prefers dark mode"
+    - Skills & expertise: "Knows Python", "Is learning React"
+    - Long-term goals: "Wants to become a full-stack developer"
+    - Ongoing projects: "Is building a startup", "Working on a side project"
+    - Personality traits: "Is introverted", "Prefers detailed explanations"
+
+2. **EPISODIC**: Time-bound events OR momentary conversational context
+    - Events with time markers: "Had meeting yesterday", "Started learning Python last week"
+    - Reactions to THIS conversation: "Is glad about the explanation", "Loved that response"
+    - One-time requests: "Wants to understand [topic]", "Looking for recommendations"
+    - Current session context: "Is debugging an error", "Needs help with X"
+    - Temporary states: "Is confused about Y", "Is excited about Z"
 
 # [IMPORTANT]: GENERATE FACTS SOLELY BASED ON THE USER'S MESSAGES. DO NOT INCLUDE INFORMATION FROM ASSISTANT OR SYSTEM MESSAGES.
-# [IMPORTANT]: YOU WILL BE PENALIZED IF YOU INCLUDE INFORMATION FROM ASSISTANT OR SYSTEM MESSAGES.
 
 # Classification Rules:
-- If the fact mentions a specific time/date/event → **EPISODIC**
-- Keywords: yesterday, today, last week, on Monday, last month, ago, recently (with time context)
-- Examples: "met someone", "went somewhere", "discussed something"
 
-- If the fact is about ongoing preferences, identity, skills, or general information → **SEMANTIC**
-- Keywords: is, loves, hates, prefers, works as, wants to, believes
-- Examples: personal info, likes/dislikes, profession, goals, habits
+## → ALWAYS EPISODIC if:
+- Contains time markers: yesterday, today, last week, recently, just now, currently
+- Is a REACTION to this conversation: glad, loved, thanks, got it, understood, makes sense
+- Is a REQUEST TO THE ASSISTANT: wants help, wants explanation, wants to understand, wants to know
+- Is a TEMPORARY STATE: does not understand yet, is confused about, is learning about
+- Is SESSION-SPECIFIC: looking for, searching for, need help with, can you explain
+- Would NOT make sense or be useful outside this specific conversation
+
+## → ONLY SEMANTIC if:
+- Is a PERMANENT IDENTITY fact: name, profession, location, age
+- Is an ENDURING PREFERENCE: loves X (food/hobby), hates Y, always prefers Z
+- Is a LONG-TERM LIFE GOAL: wants to become X, dreams of Y, career aspiration
+- Is an ONGOING PROJECT: is building X, is working on Y (not just asking about it)
+- Is a PERSONALITY TRAIT: is introverted, prefers detailed explanations (as a general trait)
+- Would STILL be true and useful to know in a completely different conversation months later
+
+# CRITICAL - These are ALWAYS EPISODIC (not semantic):
+
+| Memory | Why EPISODIC |
+|--------|--------------|
+| "Wants to understand [topic]" | Learning request in THIS conversation |
+| "Wants the assistant to explain X" | Request directed at assistant |
+| "Does not understand X yet" | Temporary knowledge state (will change) |
+| "Wants help with Y" | Session-specific request |
+| "Is confused about Z" | Temporary state |
+| "Asked about how to do X" | Conversational context |
+
+# CRITICAL - These are SEMANTIC (permanent facts):
+
+| Memory | Why SEMANTIC |
+|--------|--------------|
+| "Is a software engineer" | Profession (stable) |
+| "Loves Italian food" | Enduring food preference |
+| "Is building a project/startup" | Ongoing project |
+| "Wants to become a developer" | Life/career goal |
+| "Prefers code examples in explanations" | Enduring learning preference |
+| "Name is John" | Identity fact |
+
+# The Key Test:
+Ask: "If I meet this user in a NEW conversation with NO context, would this memory be useful?"
+- "Is building a project" → YES, useful context → SEMANTIC
+- "Wants to understand [topic]" → NO, that was a one-time request → EPISODIC
+- "Does not understand X yet" → NO, probably learned it already → EPISODIC
 
 # Output Format (JSON):
 {{
     "memories": [
-        {{
-            "content": "text of the extracted fact",
-            "type": "semantic"
-        }},
-        {{
-            "content": "text of the extracted fact",
-            "type": "episodic"
-        }}
+        {{"content": "extracted fact", "type": "semantic"}},
+        {{"content": "extracted fact", "type": "episodic"}}
     ]
 }}
 
 # Few-Shot Examples:
 
 Input:
-User: Hi.
-Assistant: Hello! How can I help?
-
-Output:
-{{"memories": []}}
-
----
-
-Input:
-User: There are branches in trees.
-Assistant: Interesting observation.
-
-Output:
-{{"memories": []}}
-
----
-
-Input:
-User: Hi, I am looking for a restaurant in San Francisco.
-Assistant: Sure, I can help with that.
-
-Output:
-{{
-    "memories": [
-        {{"content": "Looking for a restaurant in San Francisco", "type": "episodic"}}
-    ]
-}}
-
----
-
-Input:
-User: Yesterday, I had a meeting with John at 3pm. We discussed the new project.
-Assistant: Sounds productive!
-
-Output:
-{{
-    "memories": [
-        {{"content": "Had a meeting with John at 3pm yesterday and discussed the new project", "type": "episodic"}}
-    ]
-}}
-
----
-
-Input:
 User: Hi, my name is John. I am a software engineer.
 Assistant: Nice to meet you!
 
 Output:
-{{
-    "memories": [
-        {{"content": "Name is John", "type": "semantic"}},
-        {{"content": "Is a software engineer", "type": "semantic"}}
-    ]
-}}
+{{"memories": [{{"content": "Name is John", "type": "semantic"}}, {{"content": "Is a software engineer", "type": "semantic"}}]}}
 
 ---
 
 Input:
-User: My favourite movies are Inception and Interstellar.
-Assistant: Great choices!
+User: Yesterday, I had a meeting with John. We discussed the new project.
+Assistant: Sounds productive!
 
 Output:
-{{
-    "memories": [
-        {{"content": "Favourite movies are Inception and Interstellar", "type": "semantic"}}
-    ]
-}}
+{{"memories": [{{"content": "Had a meeting with John yesterday and discussed the new project", "type": "episodic"}}]}}
 
 ---
 
 Input:
-User: Last week, I started learning Python programming. I really enjoy coding and want to become a full-stack developer.
-Assistant: That's awesome!
+User: I really enjoy coding and want to become a full-stack developer.
+Assistant: That's a great goal!
 
 Output:
-{{
-    "memories": [
-        {{"content": "Started learning Python programming last week", "type": "episodic"}},
-        {{"content": "Enjoys coding", "type": "semantic"}},
-        {{"content": "Wants to become a full-stack developer", "type": "semantic"}}
-    ]
-}}
+{{"memories": [{{"content": "Enjoys coding", "type": "semantic"}}, {{"content": "Wants to become a full-stack developer", "type": "semantic"}}]}}
 
 ---
 
 Input:
-User: I'm vegetarian and I love Italian food. Yesterday I tried a new pasta place downtown.
-Assistant: How was it?
+User: Thanks! That explanation was great, I finally understood it.
+Assistant: Glad I could help!
 
 Output:
-{{
-    "memories": [
-        {{"content": "Is vegetarian", "type": "semantic"}},
-        {{"content": "Loves Italian food", "type": "semantic"}},
-        {{"content": "Tried a new pasta place downtown yesterday", "type": "episodic"}}
-    ]
-}}
+{{"memories": [{{"content": "Understood the explanation provided in this conversation", "type": "episodic"}}]}}
+
+---
+
+Input:
+User: Can you explain this concept? I want to understand how it works.
+Assistant: Sure, let me explain...
+
+Output:
+{{"memories": [{{"content": "Wants to understand a concept", "type": "episodic"}}]}}
+
+---
+
+Input:
+User: I don't understand how this works yet. Can you help me?
+Assistant: Of course!
+
+Output:
+{{"memories": [{{"content": "Does not understand a topic yet and asked for help", "type": "episodic"}}]}}
+
+---
+
+Input:
+User: I want to set up automated notifications for my project. Can you explain how?
+Assistant: Sure, you'll need to...
+
+Output:
+{{"memories": [{{"content": "Wants to learn how to set up automated notifications", "type": "episodic"}}]}}
+
+---
+
+Input:
+User: I love Italian food and I prefer spicy dishes. Can you recommend a restaurant?
+Assistant: Sure!
+
+Output:
+{{"memories": [{{"content": "Loves Italian food", "type": "semantic"}}, {{"content": "Prefers spicy dishes", "type": "semantic"}}, {{"content": "Looking for restaurant recommendations", "type": "episodic"}}]}}
+
+---
+
+Input:
+User: I'm building a side project. It's an AI-powered tool for developers.
+Assistant: That sounds interesting!
+
+Output:
+{{"memories": [{{"content": "Is building an AI-powered tool for developers as a side project", "type": "semantic"}}]}}
+
+---
+
+Input:
+User: Oh nice, I loved how you explained that in detail!
+Assistant: Happy to help!
+
+Output:
+{{"memories": [{{"content": "Appreciated the detailed explanation in this conversation", "type": "episodic"}}]}}
+
+---
+
+Input:
+User: I always prefer when explanations include code examples. That's how I learn best.
+Assistant: I'll keep that in mind!
+
+Output:
+{{"memories": [{{"content": "Prefers explanations with code examples", "type": "semantic"}}, {{"content": "Learns best with code examples", "type": "semantic"}}]}}
 
 # Remember:
 - Today's date is {datetime.now().strftime("%Y-%m-%d")}
-- Do not return anything from the custom few shot example prompts provided above
-- Extract ONLY from user messages, never from assistant or system messages
-- Classify each memory as either "semantic" or "episodic"
-- Return JSON with "memories" key containing array of objects with "content" and "type" fields
+- Extract ONLY from user messages, never from assistant messages
+- ASK YOURSELF: "Will this still be true/relevant in a month?" → Yes = SEMANTIC, No = EPISODIC
+- Reactions to the current conversation (thanks, loved it, got it, understood) → EPISODIC
+- One-time information requests → EPISODIC
+- Stable preferences and facts → SEMANTIC
 - If no relevant information found, return {{"memories": []}}
 
 Following is a conversation between the user and the assistant. Extract and classify memories in JSON format:
