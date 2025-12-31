@@ -15,7 +15,8 @@ def signup(user_data: RegisterSchema, response: Response, db: Session = Depends(
         value=token,
         max_age=86400,
         httponly=True,
-        samesite="lax"
+        samesite="none",
+        secure=True
     )
     return {
         "message": "User successfully registered",
@@ -35,7 +36,8 @@ def signin(user_data: LoginSchema, response: Response, db: Session = Depends(db_
         value=token,
         max_age=86400,
         httponly=True,
-        samesite="lax"
+        samesite="none",
+        secure=True
     )
     return {
         "message": "User logged in succesfully",
