@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: memora-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-username}
+      POSTGRES_PASSWORD: ${DB_PASS:-secret}
+      POSTGRES_DB: ${DB_NAME:-name}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME:-username} -d ${DB_NAME:-name}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - memora-network
+
+  #Qdrant Vector DB
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: memora-qdrant
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/var/lib/qdrant/data
+    ports:
+      - "6333:6333"
+    networks:
+      - memora-network
+
+  #Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: memora-backend
+    restart: unless-stopped
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME:-username}
+      - DB_PASS=${DB_PASS:-secret}
+      - DB_NAME=${DB_NAME:-name}
+      - JWT_SECRET=${JWT_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    networks:
+      - memora-network
+
+networks:
+  memora-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  qdrant_data:

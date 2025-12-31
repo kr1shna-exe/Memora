@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from exports.sql_init import db_session
-from controllers.conversations import create_conversation, delete_conversation, get_conversation_with_messages, get_user_conversations, send_message, send_message_stream
+from api.controllers.conversations import create_conversation, delete_conversation, get_conversation_with_messages, get_user_conversations, send_message, send_message_stream
 from exports.types import ConversationCreate, MessageCreate
 
 router = APIRouter()

@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Virtual environment
+.venv
+venv
+
+# Python cache
+__pycache__
+*.py[cod]
+*.so
+
+# IDE files
+.idea
+.vscode
+*.swp
+
+# Test files
+.pytest_cache
+.coverage
+htmlcov
+
+# Build artifacts
+*.egg-info
+dist
+build
+
+# Logs
+*.log
