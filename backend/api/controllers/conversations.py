@@ -243,7 +243,7 @@ async def send_message_stream(request: Request, conversation_id: int, data: Mess
 
         User: {data.content}
 
-        Provide a helpful, personalized response based on the memories and conversation context.
+        Provide a helpful, personalized response based up on the memories and conversation context.
         """
 
         llm_orchestrator = LLMOrchestrator()
