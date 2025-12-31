@@ -51,7 +51,7 @@ export async function streamMessage(
   onChunk: (chunk: string) => void,
   onDone: (data: { id: number; created_at: string }) => void
 ): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+  const baseUrl = process.env.NEXT_PUBLIC_ENV || "http://localhost:8000/api"
   const response = await fetch(
     `${baseUrl}/conversations/${conversationId}/messages/stream`,
     {
