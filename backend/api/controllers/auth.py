@@ -25,7 +25,7 @@ def create_user(user_data: RegisterSchema, db: Session):
     except Exception as e:
         db.rollback()
         print(f"Error: {str(e)}")
-        raise HTTPException(status_code=401, detail="Failed to add the user")
+        raise HTTPException(status_code=401, detail="Failed to add user")
 
 
 def get_user(user_data: LoginSchema, db: Session):
