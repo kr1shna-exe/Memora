@@ -20,7 +20,8 @@ class LLMOrchestrator:
             provider = provider or auto_provider
             model_name = model_name or auto_model
         client = LLMClient(provider=provider, model=model_name)
-        return await client.invoke(prompt)
+        response = await client.model.ainvoke(prompt)
+        return response.content
 
     async def ai_stream(self, prompt: str, provider = None, model_name = None):
         if provider is None or model_name is None:

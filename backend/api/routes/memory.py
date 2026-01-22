@@ -5,11 +5,11 @@ from storage.memory_store import MemoryStore
 
 router = APIRouter()
 
-@router.get("/patterns")
-async def get_patterns(user_id: str = Depends(get_current_user_id)):
-    procedural = ProceduralMemory()
-    patterns = await procedural.get_comprehensive_patterns(user_id)
-    return patterns
+# @router.get("/patterns")
+# async def get_patterns(user_id: str = Depends(get_current_user_id)):
+#     procedural = ProceduralMemory()
+#     patterns = await procedural.get_comprehensive_patterns(user_id)
+#     return patterns
 
 @router.get("/all")
 async def get_all_memories(user_id: str = Depends(get_current_user_id)):

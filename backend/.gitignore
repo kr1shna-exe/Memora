@@ -9,5 +9,5 @@ wheels/
 # Virtual environments
 .venv
 .env
-
+.DS_Store
 qdrant_storage/

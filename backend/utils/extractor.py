@@ -29,7 +29,7 @@ class MemoryExtractor:
             elif item.type.lower() == "episodic":
                 memory_type = MemoryType.EPISODIC
             else:
-                memory_type = MemoryType.SEMANTIC
+                memory_type = MemoryType.EPISODIC
             memory = Memory(
                     id=str(uuid.uuid4()),
                     content=item.content,

@@ -102,10 +102,9 @@ class MemoryUpdater():
                 added.append(new_mem)
 
             elif event == "UPDATE":
-                for mem in existing_memories:
-                    if mem.content == item.get("old_memory"):
-                        self.memory_store.delete_memory(mem.id)
-                        break
+                memory_id = item.get["id"]
+                if memory_id:
+                    self.memory_store.delete_user_memory(memory_id)
                 updated_mem = Memory(
                         id=item["id"],
                         user_id=user_id,
@@ -123,7 +122,7 @@ class MemoryUpdater():
                 for mem in existing_memories:
                     if mem.id == memory_id:
                         deleted_memory = mem
-                self.memory_store.delete_memory(item["id"])
+                self.memory_store.delete_user_memory(item["id"])
                 if deleted_memory:
                     deleted.append(deleted_memory)
 

@@ -114,9 +114,6 @@ class MemoryStore:
             print(f"Error while fetching user memories: {str(e)}")
             return []
 
-    def delete_memory(self, memory_id: str):
-        self.vector_store.delete(memory_id)
-
     def delete_user_memory(self, memory_id: str, user_id: str):
         try:
             result = self.vector_store.get_by_id(memory_id)

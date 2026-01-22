@@ -154,7 +154,6 @@ Please note to return the IDs in the output from the input IDs only and do not g
                     "id" : "0",
                     "text" : "Loves cheese and chicken pizza",
                     "event" : "UPDATE",
-                    "old_memory" : "I really like cheese pizza"
                 },
                 {
                     "id" : "1",
@@ -165,7 +164,6 @@ Please note to return the IDs in the output from the input IDs only and do not g
                     "id" : "2",
                     "text" : "Loves to play cricket with friends",
                     "event" : "UPDATE",
-                    "old_memory" : "User likes to play cricket"
                 }
             ]
         }

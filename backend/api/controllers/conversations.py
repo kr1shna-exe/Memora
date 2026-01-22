@@ -68,19 +68,6 @@ def delete_conversation(request: Request, conversation_id: int, db: Session):
     db.commit()
     return { "message": "Conversation deleted"}
 
-def _get_patterns_context(user_obj: User) -> str:
-    if not user_obj.patterns_json:
-        return ""
-    try:
-        patterns_data = json.loads(user_obj.patterns_json)
-        patterns = patterns_data.get("patterns", {})
-        guidelines = patterns.get("response_guidelines", [])
-        if not guidelines:
-            return ""
-        return "User communication preferences:\n" + "\n".join(f"- {g}" for g in guidelines)
-    except:
-        return ""
-
 async def _maybe_update_patterns(user_obj: User, current_conversation_id: int, db: Session):
     try:
         analyzed_up_to = 0
@@ -130,14 +117,12 @@ async def send_message(request: Request, conversation_id: int, data: MessageCrea
     query_with_context = f"Recent conversation:\n{history_txt}\n\nCurrent query: {data.content}"
     memory_agent = MemoryAgent()
     memory_txt = await memory_agent.query(query_with_context, user_id)
-
-    patterns_context = _get_patterns_context(user_obj)
-
+    patterns = await _maybe_update_patterns(user_obj, conversation_id, db)
     prompt = f"""{MEMORY_ANSWER_PROMPT}
 
     {memory_txt}
 
-    {patterns_context}
+    {patterns}
 
     Conversation history:
     {history_txt}
@@ -168,7 +153,6 @@ async def send_message(request: Request, conversation_id: int, data: MessageCrea
     except Exception as e:
         print(f"Memory Extraction Failed: {str(e)}")
 
-    await _maybe_update_patterns(user_obj, conversation_id, db)
 
     return {
         "user_message": {
@@ -229,14 +213,12 @@ async def send_message_stream(request: Request, conversation_id: int, data: Mess
         query_with_context = f"Recent conversation:\n{history_txt}\n\nCurrent query: {data.content}"
         memory_agent = MemoryAgent()
         memory_txt = await memory_agent.query(query_with_context, user_id)
-
-        patterns_context = _get_patterns_context(user_obj)
-
+        patterns = await _maybe_update_patterns(user_obj, conversation_id, db)
         prompt = f"""{MEMORY_ANSWER_PROMPT}
 
         {memory_txt}
 
-        {patterns_context}
+        {patterns}
 
         Conversation history:
         {history_txt}
