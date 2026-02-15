@@ -14,7 +14,7 @@ app = FastAPI()
 
 app.add_middleware(
         CORSMiddleware,
-        allow_origins = ["https://memora-lovat-delta.vercel.app", "https://memora.kr1shna.me","http://localhost:3000"],
+    allow_origins = ["https://memora-lovat-delta.vercel.app", "https://memora.kr1shna.me", "https://memora.kr1shna.site","http://localhost:3000"],
         allow_credentials = True,
         allow_methods = ["*"],
         allow_headers = ["*"]
